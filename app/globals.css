@@ -907,9 +907,15 @@ textarea {
   outline-offset: 6px;
   border-radius: 12px;
 }
-.ls-svg {
+.ls-img {
   display: block;
-  overflow: visible;
+  width: 216px;
+  height: auto;
+  /* the scroll sits low in the square asset — seat it on the plank */
+  margin: 0 -8px -26px -4px;
+  filter: drop-shadow(0 16px 18px rgba(0, 0, 0, 0.55));
+  user-select: none;
+  -webkit-user-drag: none;
 }
 /* hanging paper tag under the knot */
 .ls-tag {
