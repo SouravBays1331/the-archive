@@ -27,10 +27,13 @@ A persistent **reading-list tray** and the **librarian** overlay ride on top of 
 - 5 failures / 15 min per IP+username: `TRY AGAIN LATER` (server-enforced, 429).
 - Success (≈1.8s choreography): beam narrows to a line → panel drops into the slot →
   a light strip sweeps the room left→right → hand-off to the shelf.
-- **Sessions are browser-session only** (v1.2): the cookie has no expiry, so closing
-  the browser ends the session and the gate is shown again. The JWT itself lapses
-  after 12h. On a fresh sign-in, visited bookmarks and the reading list are cleared —
-  nothing carries over. *(Owns: `lib/session.ts`, `app/api/auth/route.ts`, `app/enter/EnterClient.tsx`.)*
+- **Sessions are per-tab** (v1.3): signing in mints a session id (`sid`) in the JWT
+  and mirrors it into that tab's `sessionStorage`. Same-tab reloads pass straight
+  through; a newly opened tab has no sid — even with a live cookie — and is sent back
+  to the gate before first paint. Closing the tab or browser always ends the session.
+  Visited bookmarks and the reading list are cleared on every fresh sign-in.
+  *(Owns: `lib/session.ts`, `app/api/auth/route.ts`, `app/api/session/route.ts`,
+  `components/SessionGuard.tsx`, `app/enter/EnterClient.tsx`.)*
 
 ---
 
@@ -47,7 +50,11 @@ A persistent **reading-list tray** and the **librarian** overlay ride on top of 
 | Red dot | Work in progress | `status: "in-progress"` |
 | Bookmark sticking out | You have read it; height = depth | localStorage (per session) |
 
-The **"How to read the shelf"** card at the end of the tier repeats this legend.
+The **"How to read the shelf"** card at the end of the tier is a live artefact: it
+**streams itself in** when the shelf first renders (typewriter ink, caret blinking),
+and **clicking it unrolls a full field-guide scroll** — the encoding table, all eight
+technique glyphs with names, and the keyboard reference — every line streaming in
+sequence. *(Owns: `components/shelf/LegendCard.tsx`.)*
 
 ### Interactions
 - **Hover**: volume slides out, codename catches the foil sheen, a ribbon drops with

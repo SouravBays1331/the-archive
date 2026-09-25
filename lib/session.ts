@@ -4,6 +4,7 @@ export type Tier = 'guest' | 'partner';
 export interface SessionClaims {
   sub: string;
   tier: Tier;
+  sid: string;
 }
 
 export const SESSION_COOKIE = 'archive_session';
@@ -21,7 +22,7 @@ function secret(): Uint8Array {
 }
 
 export async function createSessionToken(claims: SessionClaims): Promise<string> {
-  return new SignJWT({ tier: claims.tier })
+  return new SignJWT({ tier: claims.tier, sid: claims.sid })
     .setProtectedHeader({ alg: 'HS256' })
     .setSubject(claims.sub)
     .setIssuedAt()
@@ -33,7 +34,11 @@ export async function verifySessionToken(token: string): Promise<SessionClaims |
   try {
     const { payload } = await jwtVerify(token, secret(), { algorithms: ['HS256'] });
     if (!payload.sub) return null;
-    return { sub: payload.sub, tier: (payload.tier as Tier) ?? 'guest' };
+    return {
+      sub: payload.sub,
+      tier: (payload.tier as Tier) ?? 'guest',
+      sid: (payload.sid as string) ?? '',
+    };
   } catch {
     return null;
   }

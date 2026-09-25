@@ -30,6 +30,30 @@ export default function EnterClient() {
     };
   }, []);
 
+  // Same-tab returning visitor: the per-tab session id is still in sessionStorage,
+  // so skip the gate. A newly opened tab has no sid and sees the gate.
+  useEffect(() => {
+    let sid: string | null = null;
+    try {
+      sid = window.sessionStorage.getItem('archive.sid');
+    } catch {}
+    if (sid) {
+      fetch('/api/session')
+        .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+        .then((d: { sid?: string }) => {
+          if (d.sid === sid) {
+            router.replace(from.startsWith('/') ? from : '/');
+          } else {
+            try {
+              window.sessionStorage.removeItem('archive.sid');
+            } catch {}
+          }
+        })
+        .catch(() => {});
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (phase === 'submitting' || phase === 'success') return;
@@ -41,32 +65,35 @@ export default function EnterClient() {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ username, password }),
       });
-      if (res.ok) {
-        setPhase('success');
-        track('gate_success', { tier: 'guest', returning: false });
-        // Fresh session: nothing carries over from a previous visit (user requirement).
-        try {
-          window.localStorage.removeItem('archive.visited');
-          window.localStorage.removeItem('archive.readingList');
-          window.sessionStorage.removeItem('archive.edition');
-          window.sessionStorage.removeItem('archive.turned');
-        } catch {}
-        // Success sequence (spec Fig 7.1): beam narrows → panel slides into slot →
-        // strip lights sweep → camera eases back → hand off to the shelf.
-        timer.current = setTimeout(() => {
-          router.replace(from.startsWith('/') ? from : '/');
-        }, 1500);
-        return;
-      }
       const data = await res.json().catch(() => ({ message: 'ACCESS NOT RECOGNISED' }));
+
       if (res.status === 429) {
         setPhase('locked');
         setMessage(data.message || 'TRY AGAIN LATER');
-      } else {
+        return;
+      }
+      if (!res.ok) {
         setPhase('error');
         setMessage(data.message || 'ACCESS NOT RECOGNISED');
         timer.current = setTimeout(() => setPhase('idle'), 1400);
+        return;
       }
+
+      // Success: mint the per-tab session id, clear anything carried over.
+      setPhase('success');
+      try {
+        if (data.sid) window.sessionStorage.setItem('archive.sid', data.sid);
+        window.localStorage.removeItem('archive.visited');
+        window.localStorage.removeItem('archive.readingList');
+        window.sessionStorage.removeItem('archive.edition');
+        window.sessionStorage.removeItem('archive.turned');
+      } catch {}
+      track('gate_success', { tier: 'guest', returning: false });
+      // Success sequence (spec Fig 7.1): beam narrows → panel slides into slot →
+      // strip lights sweep → camera eases back → hand off to the shelf.
+      timer.current = setTimeout(() => {
+        router.replace(from.startsWith('/') ? from : '/');
+      }, 1500);
     } catch {
       setPhase('error');
       setMessage('ACCESS NOT RECOGNISED');

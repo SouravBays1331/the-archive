@@ -87,10 +87,15 @@ export async function POST(req: NextRequest) {
 
   clearAttempts(keys);
   const tier: Tier = user.tier;
-  const token = await createSessionToken({ sub: username, tier });
+  // Per-tab sessions: a fresh sid is minted per sign-in; the client mirrors it into
+  // sessionStorage and SessionGuard requires it on every archive page. Closing the
+  // tab (or the browser) therefore always ends the session — spec §07's "returning
+  // visitor" skip now only applies within the same tab.
+  const sid = crypto.randomUUID();
+  const token = await createSessionToken({ sub: username, tier, sid });
   const secure = process.env.NODE_ENV === 'production' && process.env.COOKIE_INSECURE !== '1';
 
-  const res = NextResponse.json({ ok: true, tier });
+  const res = NextResponse.json({ ok: true, tier, sid });
   res.cookies.set(SESSION_COOKIE, token, {
     httpOnly: true,
     secure,

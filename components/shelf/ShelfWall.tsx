@@ -8,6 +8,7 @@ import { rngFor } from '@/lib/seed';
 import { useArchive } from '@/lib/store';
 import { track } from '@/lib/analytics';
 import LibrarianPanel from './LibrarianPanel';
+import LegendCard from './LegendCard';
 
 export interface ShelfVolume {
   slug: string;
@@ -409,25 +410,7 @@ export default function ShelfWall({
             </React.Fragment>
             ));
           })()}
-          <aside className="legend-card" aria-label="How to read the shelf">
-            <h4>How to read the shelf</h4>
-            <dl>
-              <dt>Band</dt>
-              <dd>
-                <span className="swatch" style={{ background: 'var(--acc-operations)' }} />domain
-              </dd>
-              <dt>Glyphs</dt>
-              <dd>techniques used</dd>
-              <dt>Thickness</dt>
-              <dd>complexity 1–5</dd>
-              <dt>Foil bands</dt>
-              <dd>headline impact</dd>
-              <dt>Material</dt>
-              <dd>kind of system</dd>
-              <dt>Red dot</dt>
-              <dd>in progress</dd>
-            </dl>
-          </aside>
+          <LegendCard />
           <div className="plank" aria-hidden="true" />
         </div>
       </main>

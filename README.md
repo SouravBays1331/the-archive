@@ -34,9 +34,13 @@ your own with `npm run hash -- yourpassword` and paste the printed line into
   Generate a ready-to-paste line: `npm run hash -- mypassword`
 - `tier` is `guest` (default) or `partner` (wired for the Restricted Section later).
 - Session: HS256 JWT (`jose`) in an httpOnly / SameSite=Lax **browser-session cookie**
-  (no expiry — closing the browser ends the session and the gate is required again);
-  the token itself lapses after 12h. Visited/reading-list state is cleared on each
-  fresh sign-in, so nothing carries over between sessions.
+  (no expiry) whose payload carries a per-sign-in `sid`. The sid is mirrored into
+  `sessionStorage` and `SessionGuard` requires it before first paint on every archive
+  page — so closing the **tab** or the browser always ends the session and the gate is
+  shown again; only a same-tab reload passes through. The token itself lapses after
+  12h. Visited/reading-list state is cleared on each fresh sign-in.
+- Legend: the "How to read the shelf" card streams itself in (typewriter) and unrolls
+  into a full field guide — glyph glossary and keyboard reference (`GUIDE.md`).
   Secret: `AUTH_SECRET` (>= 24 chars).
 - Rate limit: 5 failed attempts per IP+username per 15 min → 429 `TRY AGAIN LATER`.
 - `middleware.ts` enforces auth on EVERY route, asset and API except `/enter` and

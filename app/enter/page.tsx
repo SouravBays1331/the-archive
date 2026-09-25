@@ -1,15 +1,11 @@
-import { redirect } from 'next/navigation';
-import { cookies } from 'next/headers';
-import { verifySessionToken, SESSION_COOKIE } from '@/lib/session';
 import EnterClient from './EnterClient';
 
 export const dynamic = 'force-dynamic';
 
-export default async function EnterPage() {
-  // Returning visitor with a valid session skips the gate (spec §07).
-  const token = cookies().get(SESSION_COOKIE)?.value;
-  const session = token ? await verifySessionToken(token) : null;
-  if (session) redirect('/');
-
+// The gate always renders for full page loads; whether a returning same-tab
+// visitor skips straight through is decided client-side (sessionStorage holds
+// the per-tab session id). This is what makes a newly opened tab demand
+// credentials again even while a cookie is still technically alive.
+export default function EnterPage() {
   return <EnterClient />;
 }

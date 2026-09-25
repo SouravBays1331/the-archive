@@ -2959,3 +2959,222 @@ textarea {
 .popup-stage.touring .snum {
   background: var(--ch-acc, var(--blueprint));
 }
+
+/* ============================================================
+   v1.3 · legend scroll (streaming field guide) + per-tab session
+   ============================================================ */
+.legend-card.legend-live {
+  cursor: pointer;
+  transition:
+    transform var(--d-base) var(--ease-lift),
+    box-shadow var(--d-base) var(--ease-standard);
+}
+.legend-card.legend-live:hover {
+  transform: rotate(-0.4deg) translateY(-4px);
+  box-shadow: 0 20px 44px -16px rgba(0, 0, 0, 0.9);
+}
+.legend-card.legend-live:focus-visible {
+  outline: 2px solid var(--lamp);
+  outline-offset: 3px;
+}
+.legend-card .unfold-hint {
+  margin-top: 9px;
+  font-family: var(--font-mono), monospace;
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  opacity: 0;
+  transition: opacity var(--d-slow) var(--ease-standard);
+}
+.legend-card.hint-up .unfold-hint {
+  opacity: 0.85;
+}
+
+.caret {
+  display: inline-block;
+  width: 6px;
+  height: 11px;
+  margin-left: 2px;
+  vertical-align: -1px;
+  background: currentColor;
+  opacity: 0.75;
+  animation: caretblink 0.85s steps(1) infinite;
+}
+@keyframes caretblink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.scroll-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(11, 11, 13, 0.8);
+  z-index: 140;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadein var(--d-base) var(--ease-standard) both;
+}
+.scroll-panel {
+  position: relative;
+  width: min(470px, 94vw);
+  max-height: 88vh;
+  overflow-y: auto;
+  background: var(--paper);
+  color: var(--ink);
+  border-radius: 4px;
+  padding: 30px 30px 24px;
+  box-shadow: 0 60px 120px -40px rgba(0, 0, 0, 0.95);
+  animation: scrollunroll 620ms var(--ease-emphasized) both;
+}
+/* rolled ends of the unrolled scroll */
+.scroll-panel::before,
+.scroll-panel::after {
+  content: '';
+  position: sticky;
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  height: 9px;
+  border-radius: 99px;
+  background: linear-gradient(180deg, #ddd6c6, #b7ae99);
+  box-shadow: 0 2px 6px rgba(27, 26, 24, 0.35);
+}
+.scroll-panel::before {
+  top: -5px;
+}
+.scroll-panel::after {
+  bottom: -5px;
+}
+@keyframes scrollunroll {
+  from {
+    opacity: 0;
+    transform: scaleY(0.25) translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.scroll-crest {
+  border-bottom: 1px solid var(--ink);
+  padding-bottom: 12px;
+  margin-bottom: 6px;
+}
+.scroll-crest h3 {
+  font-family: var(--font-mono), monospace;
+  font-size: 13px;
+  letter-spacing: 0.22em;
+  font-weight: 600;
+}
+.scroll-sub {
+  margin-top: 6px;
+  font-family: var(--font-serif), Georgia, serif;
+  font-style: italic;
+  font-size: 14px;
+  color: var(--ink-soft);
+  min-height: 18px;
+}
+.scroll-rows {
+  margin: 4px 0 8px;
+}
+.scroll-row {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--rule);
+  opacity: 0;
+  transform: translateY(5px);
+  transition:
+    opacity var(--d-base) var(--ease-standard),
+    transform var(--d-base) var(--ease-standard);
+}
+.scroll-row.on {
+  opacity: 1;
+  transform: none;
+}
+.scroll-row dt {
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink);
+  padding-top: 2px;
+  min-height: 14px;
+}
+.scroll-row dd {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+.scroll-row.keys kbd {
+  display: inline-block;
+  border: 1px solid var(--ink);
+  border-radius: 4px;
+  padding: 1px 7px;
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.4);
+}
+.scroll-h4 {
+  margin-top: 18px;
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink);
+  min-height: 14px;
+}
+.glyph-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+}
+.glyph-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 4px 7px;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  font-family: var(--font-mono), monospace;
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  text-align: center;
+  opacity: 0;
+  transform: translateY(6px) scale(0.96);
+  transition:
+    opacity var(--d-base) var(--ease-standard),
+    transform var(--d-base) var(--ease-lift);
+}
+.glyph-cell.on {
+  opacity: 1;
+  transform: none;
+}
+.glyph-cell:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+.scroll-foot {
+  margin-top: 16px;
+  font-family: var(--font-mono), monospace;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  text-align: center;
+}
+@media (max-width: 640px) {
+  .glyph-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
