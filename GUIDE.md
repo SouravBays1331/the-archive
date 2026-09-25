@@ -50,12 +50,12 @@ A persistent **reading-list tray** and the **librarian** overlay ride on top of 
 | Red dot | Work in progress | `status: "in-progress"` |
 | Bookmark sticking out | You have read it; height = depth | localStorage (per session) |
 
-At the end of the tier stands a **furled scroll** — a rolled parchment tube with a
-spiral coil and a red tie ribbon, its hanging "FIELD GUIDE" tag typing itself in.
-**Clicking it unrolls the full field-guide scroll**: aged parchment between two
-wooden rods with brass finials, streaming in the encoding table, all eight
+At the end of the tier **lies a furled scroll** — a hand-drawn vector artefact with an
+open spiral end, a peeling flap and a twine tie, its hanging "FIELD GUIDE" tag typing
+itself in. **Clicking it unrolls the full field-guide scroll**: aged parchment between
+two wooden rods with brass finials, streaming in the encoding table, all eight
 technique glyphs with names, and the keyboard reference. *(Owns:
-`components/shelf/LegendCard.tsx`.)*
+`components/shelf/LegendCard.tsx` — the SVG is inline and hand-tuned.)*
 
 ### Interactions
 - **Hover**: volume slides out, codename catches the foil sheen, a ribbon drops with

@@ -888,80 +888,34 @@ textarea {
   white-space: nowrap;
 }
 
-/* the furled scroll standing at the end of the tier — click to unroll */
+/* the furled scroll lying at the end of the tier — click to unroll */
 .legend-scroll {
   align-self: flex-end;
-  margin: 0 6px 2px 20px;
+  margin: 0 10px 6px 24px;
   position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 5px;
-  transform: rotate(-1.2deg);
   cursor: pointer;
   transition:
     transform var(--d-base) var(--ease-lift),
     filter var(--d-base) var(--ease-standard);
 }
 .legend-scroll:hover {
-  transform: rotate(-0.2deg) translateY(-4px);
-  filter: brightness(1.05);
+  transform: translateY(-4px) rotate(0.8deg);
+  filter: brightness(1.06);
 }
 .legend-scroll:focus-visible {
   outline: 2px solid var(--lamp);
   outline-offset: 6px;
   border-radius: 12px;
 }
-/* the rolled parchment tube */
-.ls-tube {
-  position: relative;
-  width: 42px;
-  height: 146px;
-  border-radius: 21px / 16px;
-  background: linear-gradient(90deg, #c4b489 0%, #f0e6cc 26%, #fbf5e4 45%, #eee2c2 68%, #ab9868 100%);
-  box-shadow:
-    inset 0 0 0 1px rgba(120, 90, 40, 0.28),
-    inset 0 -12px 14px -10px rgba(120, 90, 40, 0.5),
-    0 14px 24px -14px rgba(0, 0, 0, 0.85);
+.ls-svg {
+  display: block;
+  overflow: visible;
 }
-/* spiral coil where the paper rolls over at the top */
-.ls-coil {
-  position: absolute;
-  top: -8px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 46px;
-  height: 17px;
-  border-radius: 50%;
-  background: radial-gradient(
-    ellipse at center,
-    #8a744a 0 16%,
-    #ece0bd 16% 32%,
-    #ab9464 32% 50%,
-    #f4ecd4 50% 68%,
-    #9c854f 68% 84%,
-    #cec09a 84% 100%
-  );
-  box-shadow:
-    inset 0 1px 2px rgba(0, 0, 0, 0.35),
-    0 2px 4px rgba(0, 0, 0, 0.4);
-}
-/* the tie ribbon */
-.ls-ribbon {
-  position: absolute;
-  top: 56%;
-  left: -3px;
-  right: -3px;
-  height: 10px;
-  border-radius: 2px;
-  background: linear-gradient(180deg, #c2453a 0%, #a03229 55%, #7c241e 100%);
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.28);
-}
-/* hanging paper tag */
+/* hanging paper tag under the knot */
 .ls-tag {
-  position: relative;
+  position: absolute;
+  right: -4px;
+  bottom: -6px;
   background: var(--paper-2);
   color: var(--ink);
   font-family: var(--font-mono), monospace;
@@ -975,14 +929,15 @@ textarea {
   min-height: 21px;
   display: flex;
   align-items: center;
+  transform: rotate(1deg);
 }
 .ls-tag::before {
   content: '';
   position: absolute;
   bottom: 100%;
-  left: 50%;
+  left: 14px;
   width: 1px;
-  height: 9px;
+  height: 12px;
   background: rgba(211, 199, 168, 0.75);
 }
 
