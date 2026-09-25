@@ -43,6 +43,36 @@ const OBJECT_LABEL: Record<string, string> = {
   boxed: 'Boxed set · multi-phase programme',
 };
 
+/* Left pages render as archival plates: labelled frame, filled composition,
+   footnote rule — so no spread ever looks half-empty. */
+function Plate({
+  num,
+  name,
+  footLeft,
+  footRight,
+  children,
+}: {
+  num: string;
+  name: string;
+  footLeft: string;
+  footRight?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="plate">
+      <div className="plate-head">
+        <span className="pt">Plate {num}</span>
+        <span className="pn">{name}</span>
+      </div>
+      <div className="plate-body">{children}</div>
+      <div className="plate-foot">
+        <span>{footLeft}</span>
+        {footRight && <span className="pfr">{footRight}</span>}
+      </div>
+    </div>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /* 0 · Title page                                                      */
 /* ------------------------------------------------------------------ */
@@ -108,11 +138,18 @@ const titleChapter: Chapter = {
   title: 'Title page',
   short: 'Title',
   left: ({ volume }) => (
-    <div className="tp-left rv" style={{ ['--i' as string]: 0 }}>
-      <div className="tp-cover">
-        <CoverArt volume={volume} />
+    <Plate
+      num="0"
+      name="The cover"
+      footLeft="generative composition · seeded by the volume"
+      footRight="one accent, one story"
+    >
+      <div className="tp-left rv" style={{ ['--i' as string]: 0 }}>
+        <div className="tp-cover">
+          <CoverArt volume={volume} />
+        </div>
       </div>
-    </div>
+    </Plate>
   ),
   right: ({ volume }) => (
     <div className="tp-right">
@@ -265,9 +302,16 @@ const problemChapter: Chapter = {
   title: 'The problem',
   short: 'Problem',
   left: ({ volume, revealed }) => (
-    <div className="tangle-wrap">
-      <Tangle slug={volume.slug} accent={accentFor(volume.domain)} active={revealed} />
-    </div>
+    <Plate
+      num="1"
+      name="The tangle"
+      footLeft="generative exhibit · the pain, knotted"
+      footRight="one thread lifts out ↗"
+    >
+      <div className="tangle-wrap">
+        <Tangle slug={volume.slug} accent={accentFor(volume.domain)} active={revealed} />
+      </div>
+    </Plate>
   ),
   right: ({ volume, edition }) => {
     const p = volume.problem;
@@ -361,6 +405,11 @@ function PopUpScene({
 
   return (
     <div className={`popup-scene${revealed ? ' revealed' : ' stage-flat'}`}>
+      {/* ghost numeral fills the upper plate — like a classic drawing sheet */}
+      <div className="plate-ghost" aria-hidden="true">
+        {stages.length}
+      </div>
+      <div className="fold-line" aria-hidden="true" />
       <svg className="popup-track" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true">
         {stages.slice(0, -1).map((s, i) => {
           const x1 = 6 + (i * 88) / Math.max(1, n - 1) + 6;
@@ -384,9 +433,9 @@ function PopUpScene({
             key={s.id}
             className="popup-stage"
             style={{
-              left: `calc(${pct}% - 66px)`,
-              bottom: i % 2 === 0 ? '0%' : '9%',
-              width: 'min(132px, 24%)',
+              left: `calc(${pct}% - 75px)`,
+              bottom: `calc(24% + ${(i % 2) * 5}%)`,
+              width: 'min(150px, 26%)',
               zIndex: 2,
               ['--i' as string]: i,
             }}
@@ -413,7 +462,16 @@ const approachChapter: Chapter = {
   num: '2',
   title: 'The approach',
   short: 'Approach',
-  left: ({ volume, edition, revealed }) => <PopUpScene volume={volume} edition={edition} revealed={revealed} />,
+  left: ({ volume, edition, revealed }) => (
+    <Plate
+      num="2"
+      name="The build, stage by stage"
+      footLeft="hover or focus any stage for detail"
+      footRight="paper tracks carry the flow"
+    >
+      <PopUpScene volume={volume} edition={edition} revealed={revealed} />
+    </Plate>
+  ),
   right: ({ volume, edition }) => (
     <div>
       <div className="kicker rv" style={{ ['--i' as string]: 0 }}>
@@ -584,7 +642,16 @@ const engineChapter: Chapter = {
   num: '3',
   title: 'Under the hood',
   short: 'Engine',
-  left: ({ volume, revealed }) => <VellumOverlay volume={volume} revealed={revealed} />,
+  left: ({ volume, revealed }) => (
+    <Plate
+      num="3"
+      name="The blueprint on vellum"
+      footLeft="drag the vellum sideways"
+      footRight="engineering ↔ business view"
+    >
+      <VellumOverlay volume={volume} revealed={revealed} />
+    </Plate>
+  ),
   right: ({ volume }) => (
     <div>
       <div className="kicker rv" style={{ ['--i' as string]: 0 }}>
@@ -664,30 +731,37 @@ const valueChapter: Chapter = {
   title: 'The value',
   short: 'Value',
   left: ({ volume }) => (
-    <div className="ba-wrap">
-      <div className="ba-block before rv" style={{ ['--i' as string]: 0 }}>
-        <svg className="before-docs" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-          {Array.from({ length: 9 }).map((_, i) => (
-            <rect
-              key={i}
-              x={(i * 13) % 80}
-              y={(i * 17) % 70}
-              width={22}
-              height={26}
-              rx="1"
-              fill="var(--ink)"
-              transform={`rotate(${(i * 11) % 30} 50 50)`}
-            />
-          ))}
-        </svg>
-        <div className="ba-lbl">Before</div>
-        {volume.value.before}
+    <Plate
+      num="4"
+      name="Before → after"
+      footLeft="the shift, side by side"
+      footRight={`${volume.value.metrics.length} metrics stamped →`}
+    >
+      <div className="ba-wrap">
+        <div className="ba-block before rv" style={{ ['--i' as string]: 0 }}>
+          <svg className="before-docs" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            {Array.from({ length: 9 }).map((_, i) => (
+              <rect
+                key={i}
+                x={(i * 13) % 80}
+                y={(i * 17) % 70}
+                width={22}
+                height={26}
+                rx="1"
+                fill="var(--ink)"
+                transform={`rotate(${(i * 11) % 30} 50 50)`}
+              />
+            ))}
+          </svg>
+          <div className="ba-lbl">Before</div>
+          {volume.value.before}
+        </div>
+        <div className="ba-block after rv" style={{ ['--i' as string]: 1 }}>
+          <div className="ba-lbl">After</div>
+          {volume.value.after}
+        </div>
       </div>
-      <div className="ba-block after rv" style={{ ['--i' as string]: 1 }}>
-        <div className="ba-lbl">After</div>
-        {volume.value.after}
-      </div>
-    </div>
+    </Plate>
   ),
   right: ({ volume }) => (
     <div>
@@ -778,14 +852,13 @@ function LedgerInputs({ volume }: { volume: Volume }) {
   }, [vals, volume.slug]);
 
   return (
-    <div className="ledger">
-      <div className="kicker rv" style={{ ['--i' as string]: 0 }}>
-        Chapter 5 · Your return
-      </div>
-      <h2 className="chapter-title rv" style={{ ['--i' as string]: 1, fontSize: 'var(--fs-h3)' }}>
-        Run your own numbers.
-      </h2>
-      <div className="ledger-inputs" style={{ marginTop: 14 }}>
+    <Plate
+      num="5"
+      name="Your numbers"
+      footLeft="adjust any input — totals roll live"
+      footRight="see the facing page"
+    >
+      <div className="ledger-inputs" style={{ marginTop: 2 }}>
         {roi.inputs.map((inp) => (
           <label key={inp.id} className="rv" style={{ ['--i' as string]: 2 }}>
             <span className="ll">{inp.label}</span>
@@ -811,7 +884,7 @@ function LedgerInputs({ volume }: { volume: Volume }) {
           </label>
         ))}
       </div>
-    </div>
+    </Plate>
   );
 }
 
@@ -916,20 +989,26 @@ function CheckoutLeft({ volume }: { volume: Volume }) {
     .join(' · ');
 
   return (
-    <div className="pocket rv" style={{ ['--i' as string]: 0 }}>
-      <div className="pocket-label">Borrow this volume</div>
-      <div className={`checkout-card${done ? ' slid' : ''}`}>
-        {stamped && <div className="date-stamp on">{today} · CHECKED OUT</div>}
-        <CheckoutCard
-          slugs={slugs}
-          prePrinted={pre}
-          onDone={() => {
-            setStamped(true);
-            setTimeout(() => setDone(true), 1400);
-          }}
-        />
+    <Plate
+      num="E"
+      name="The borrowing card"
+      footLeft="fill the card, take the volume"
+      footRight="we reply within one business day"
+    >
+      <div className="pocket rv" style={{ ['--i' as string]: 0 }}>
+        <div className={`checkout-card${done ? ' slid' : ''}`}>
+          {stamped && <div className="date-stamp on">{today} · CHECKED OUT</div>}
+          <CheckoutCard
+            slugs={slugs}
+            prePrinted={pre}
+            onDone={() => {
+              setStamped(true);
+              setTimeout(() => setDone(true), 1400);
+            }}
+          />
+        </div>
       </div>
-    </div>
+    </Plate>
   );
 }
 

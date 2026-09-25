@@ -6,6 +6,7 @@ import { track } from '@/lib/analytics';
 
 interface Rec {
   slug: string;
+  codename?: string;
   reason: string;
 }
 interface Turn {
@@ -101,7 +102,7 @@ export default function LibrarianPanel({ onClose }: { onClose: () => void }) {
             {t.text}
             {t.recs?.map((r) => (
               <button className="lib-chip" key={r.slug} onClick={() => openRec(r.slug)}>
-                <span className="cn">{r.slug.toUpperCase()}</span>
+                <span className="cn">{r.codename ?? r.slug.toUpperCase()}</span>
                 <span className="rs">{r.reason}</span>
               </button>
             ))}

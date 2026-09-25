@@ -2780,3 +2780,128 @@ textarea {
     transform: translateX(30px) rotate(2deg);
   }
 }
+
+/* ============================================================
+   v1.2 · left-page plates + naming/size refinements
+   ============================================================ */
+.plate {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.plate-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  border-bottom: 1px solid var(--ink);
+  padding-bottom: 9px;
+}
+.plate-head .pt {
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.plate-head .pn {
+  font-family: var(--font-serif), Georgia, serif;
+  font-style: italic;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+.plate-body {
+  flex: 1;
+  position: relative;
+  min-height: 0;
+  margin-top: 14px;
+}
+.plate-foot {
+  border-top: 1px solid var(--rule);
+  margin-top: 14px;
+  padding-top: 9px;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-family: var(--font-mono), monospace;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.plate-foot .pfr {
+  color: var(--ch-acc, var(--blueprint));
+}
+.plate-ghost {
+  position: absolute;
+  inset: 6% 8% 30% 8%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: clamp(110px, 12vw, 190px);
+  line-height: 1;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(27, 26, 24, 0.14);
+  pointer-events: none;
+  user-select: none;
+}
+.fold-line {
+  position: absolute;
+  left: 5%;
+  right: 5%;
+  bottom: 24%;
+  height: 2px;
+  background: var(--rule);
+}
+.fold-line::before,
+.fold-line::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  width: 1px;
+  height: 10px;
+  background: var(--rule);
+}
+.fold-line::before {
+  left: 0;
+}
+.fold-line::after {
+  right: 0;
+}
+.popup-scene {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  perspective: 1100px;
+  overflow: hidden;
+  padding-bottom: 0;
+}
+.popup-track {
+  bottom: calc(24% + 1px);
+  height: 2px;
+}
+.popup-stage {
+  bottom: 24%;
+  padding: 12px 14px 13px;
+}
+
+/* fills */
+.tangle-wrap svg {
+  width: min(94%, 560px);
+  max-height: 96%;
+}
+.ba-block {
+  flex: 1;
+}
+
+@media (max-width: 980px) {
+  .plate-body {
+    min-height: 260px;
+  }
+  .plate-ghost {
+    font-size: 110px;
+  }
+}

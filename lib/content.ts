@@ -1,13 +1,13 @@
 import { volumeSchema, Volume } from '@/lib/schema';
-import almanac from '@/content/volumes/almanac.json';
-import augur from '@/content/volumes/augur.json';
-import lodestar from '@/content/volumes/lodestar.json';
-import meridian from '@/content/volumes/meridian.json';
-import orrery from '@/content/volumes/orrery.json';
-import parallax from '@/content/volumes/parallax.json';
+import batchproof from '@/content/volumes/batchproof.json';
+import finlineage from '@/content/volumes/finlineage.json';
+import answerrank from '@/content/volumes/answerrank.json';
+import reconcile from '@/content/volumes/reconcile.json';
+import specforge from '@/content/volumes/specforge.json';
+import triageEngine from '@/content/volumes/triage-engine.json';
 
 function loadAll(): Volume[] {
-  const raw = [almanac, augur, lodestar, meridian, orrery, parallax];
+  const raw = [batchproof, finlineage, answerrank, reconcile, specforge, triageEngine];
   const volumes = raw.map((v) => volumeSchema.parse(v));
 
   // Cross-validation: edges reference existing stages; related references existing slugs.

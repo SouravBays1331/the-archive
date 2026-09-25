@@ -1,6 +1,6 @@
 {
-  "slug": "meridian",
-  "codename": "MERIDIAN",
+  "slug": "batchproof",
+  "codename": "BatchProof",
   "objectType": "binder",
   "domain": "operations",
   "sectorTag": "Precision manufacturing",
@@ -121,6 +121,6 @@
     "footnote": "Illustrative estimate based on outcomes observed in comparable engagements. Not a quote."
   },
 
-  "related": ["augur", "parallax"],
+  "related": ["triage-engine", "reconcile"],
   "cta": { "variant": "demo" }
 }

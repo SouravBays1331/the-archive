@@ -59,7 +59,7 @@ const roiInputSchema = z.object({
 
 export const volumeSchema = z.object({
   slug: z.string().regex(/^[a-z0-9-]+$/),
-  codename: z.string().regex(/^[A-Z]+$/),
+  codename: z.string().regex(/^[A-Za-z][A-Za-z0-9]{2,31}$/),
   objectType: objectTypeSchema,
   domain: domainSchema,
   sectorTag: z.string().min(1),

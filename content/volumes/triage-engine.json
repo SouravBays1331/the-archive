@@ -1,6 +1,6 @@
 {
-  "slug": "augur",
-  "codename": "AUGUR",
+  "slug": "triage-engine",
+  "codename": "TriageEngine",
   "objectType": "dossier",
   "domain": "risk",
   "sectorTag": "Hardware engineering",
@@ -122,6 +122,6 @@
     "footnote": "Illustrative estimate based on outcomes observed in comparable engagements. Not a quote."
   },
 
-  "related": ["orrery", "lodestar"],
+  "related": ["specforge", "answerrank"],
   "cta": { "variant": "pilot" }
 }

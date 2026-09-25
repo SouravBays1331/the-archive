@@ -1,6 +1,6 @@
 {
-  "slug": "orrery",
-  "codename": "ORRERY",
+  "slug": "specforge",
+  "codename": "SpecForge",
   "objectType": "boxed",
   "domain": "simulation",
   "sectorTag": "Semiconductors",
@@ -121,6 +121,6 @@
     "footnote": "Illustrative estimate based on outcomes observed in comparable engagements. Not a quote."
   },
 
-  "related": ["augur", "meridian"],
+  "related": ["triage-engine", "batchproof"],
   "cta": { "variant": "explore" }
 }

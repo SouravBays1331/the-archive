@@ -10,6 +10,9 @@ spec's Phase 0 (foundations + auth), Phase 1 (flat archive, fully readable with 
 WebGL), and the DOM implementations of the Phase 4 chapter mechanics — with the 2.5D
 CSS shelf rendering that the spec itself designates as the no-WebGL / tier-1 path.
 
+**Start with [`GUIDE.md`](./GUIDE.md)** — the full walkthrough of every scene,
+interaction, chapter mechanic, and the content-field → visual mapping.
+
 ## Quick start
 
 ```bash
@@ -30,7 +33,10 @@ your own with `npm run hash -- yourpassword` and paste the printed line into
 - dotenv expands `$` inside `.env` files, so hashes are stored with `$` encoded as `~`.
   Generate a ready-to-paste line: `npm run hash -- mypassword`
 - `tier` is `guest` (default) or `partner` (wired for the Restricted Section later).
-- Session: HS256 JWT (`jose`) in an httpOnly / SameSite=Lax cookie, 7-day expiry.
+- Session: HS256 JWT (`jose`) in an httpOnly / SameSite=Lax **browser-session cookie**
+  (no expiry — closing the browser ends the session and the gate is required again);
+  the token itself lapses after 12h. Visited/reading-list state is cleared on each
+  fresh sign-in, so nothing carries over between sessions.
   Secret: `AUTH_SECRET` (>= 24 chars).
 - Rate limit: 5 failed attempts per IP+username per 15 min → 429 `TRY AGAIN LATER`.
 - `middleware.ts` enforces auth on EVERY route, asset and API except `/enter` and

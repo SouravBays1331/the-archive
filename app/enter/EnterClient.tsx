@@ -44,6 +44,13 @@ export default function EnterClient() {
       if (res.ok) {
         setPhase('success');
         track('gate_success', { tier: 'guest', returning: false });
+        // Fresh session: nothing carries over from a previous visit (user requirement).
+        try {
+          window.localStorage.removeItem('archive.visited');
+          window.localStorage.removeItem('archive.readingList');
+          window.sessionStorage.removeItem('archive.edition');
+          window.sessionStorage.removeItem('archive.turned');
+        } catch {}
         // Success sequence (spec Fig 7.1): beam narrows → panel slides into slot →
         // strip lights sweep → camera eases back → hand off to the shelf.
         timer.current = setTimeout(() => {

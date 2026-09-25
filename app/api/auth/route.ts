@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import { createSessionToken, SESSION_COOKIE, SESSION_MAX_AGE, Tier } from '@/lib/session';
+import { createSessionToken, SESSION_COOKIE, Tier } from '@/lib/session';
 
 // ARCHIVE_USERS format: "username:bcryptHash[,tier]|username2:bcryptHash2"
 // dotenv expands `$` in .env files, so hashes are stored with `$` encoded as `~`
@@ -96,7 +96,8 @@ export async function POST(req: NextRequest) {
     secure,
     sameSite: 'lax',
     path: '/',
-    maxAge: SESSION_MAX_AGE,
+    // no maxAge → browser-session cookie: closing the browser ends the session
+    // and the gate is required again on reopen.
   });
   return res;
 }

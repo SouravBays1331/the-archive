@@ -7,7 +7,10 @@ export interface SessionClaims {
 }
 
 export const SESSION_COOKIE = 'archive_session';
-export const SESSION_MAX_AGE = 7 * 24 * 60 * 60; // 7 days, seconds
+// Token validity ceiling. The cookie itself is a *browser-session cookie* (no maxAge),
+// so closing the browser ends the session and the gate is shown again (user requirement,
+// overriding the spec's 7-day persistent session).
+export const SESSION_TTL_HOURS = 12;
 
 function secret(): Uint8Array {
   const s = process.env.AUTH_SECRET;
@@ -22,7 +25,7 @@ export async function createSessionToken(claims: SessionClaims): Promise<string>
     .setProtectedHeader({ alg: 'HS256' })
     .setSubject(claims.sub)
     .setIssuedAt()
-    .setExpirationTime(`${SESSION_MAX_AGE}s`)
+    .setExpirationTime(`${SESSION_TTL_HOURS}h`)
     .sign(secret());
 }
 

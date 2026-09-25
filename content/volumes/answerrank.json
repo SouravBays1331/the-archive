@@ -1,6 +1,6 @@
 {
-  "slug": "lodestar",
-  "codename": "LODESTAR",
+  "slug": "answerrank",
+  "codename": "AnswerRank",
   "objectType": "notebook",
   "domain": "growth",
   "sectorTag": "Marketing technology",
@@ -113,6 +113,6 @@
     "footnote": "Illustrative estimate based on outcomes observed in comparable engagements. Not a quote."
   },
 
-  "related": ["augur", "parallax"],
+  "related": ["triage-engine", "reconcile"],
   "cta": { "variant": "demo" }
 }

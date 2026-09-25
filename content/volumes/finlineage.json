@@ -1,6 +1,6 @@
 {
-  "slug": "almanac",
-  "codename": "ALMANAC",
+  "slug": "finlineage",
+  "codename": "FinLineage",
   "objectType": "hardcover",
   "domain": "finance",
   "sectorTag": "Financial services",
@@ -114,6 +114,6 @@
     "footnote": "Illustrative estimate based on outcomes observed in comparable engagements. Not a quote."
   },
 
-  "related": ["parallax", "meridian"],
+  "related": ["reconcile", "batchproof"],
   "cta": { "variant": "partnership" }
 }

@@ -57,7 +57,7 @@ function keywordFallback(
   }
   return {
     message: `Based on what you described, ${scored.length === 1 ? 'this volume is' : 'these volumes are'} the closest match in the collection:`,
-    recommendations: scored.map(({ v }) => ({ slug: v.slug, reason: v.hook })),
+    recommendations: scored.map(({ v }) => ({ slug: v.slug, codename: v.codename, reason: v.hook })),
   };
 }
 
@@ -127,10 +127,12 @@ export async function POST(req: NextRequest) {
             })
             .safeParse(JSON.parse(match[0]));
           if (parsedOut.success) {
-            const valid = new Set(summaries.map((s) => s.slug));
+            const valid = new Map(summaries.map((s) => [s.slug, s.codename]));
             return NextResponse.json({
               message: parsedOut.data.message,
-              recommendations: parsedOut.data.recommendations.filter((r) => valid.has(r.slug)),
+              recommendations: parsedOut.data.recommendations
+                .filter((r) => valid.has(r.slug))
+                .map((r) => ({ ...r, codename: valid.get(r.slug) })),
             });
           }
         }
