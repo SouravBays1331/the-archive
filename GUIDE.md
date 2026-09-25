@@ -50,11 +50,12 @@ A persistent **reading-list tray** and the **librarian** overlay ride on top of 
 | Red dot | Work in progress | `status: "in-progress"` |
 | Bookmark sticking out | You have read it; height = depth | localStorage (per session) |
 
-The **"How to read the shelf"** card at the end of the tier is a live artefact: it
-**streams itself in** when the shelf first renders (typewriter ink, caret blinking),
-and **clicking it unrolls a full field-guide scroll** — the encoding table, all eight
-technique glyphs with names, and the keyboard reference — every line streaming in
-sequence. *(Owns: `components/shelf/LegendCard.tsx`.)*
+At the end of the tier stands a **furled scroll** — a rolled parchment tube with a
+spiral coil and a red tie ribbon, its hanging "FIELD GUIDE" tag typing itself in.
+**Clicking it unrolls the full field-guide scroll**: aged parchment between two
+wooden rods with brass finials, streaming in the encoding table, all eight
+technique glyphs with names, and the keyboard reference. *(Owns:
+`components/shelf/LegendCard.tsx`.)*
 
 ### Interactions
 - **Hover**: volume slides out, codename catches the foil sheen, a ribbon drops with
