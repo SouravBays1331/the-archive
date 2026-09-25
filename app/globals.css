@@ -2905,3 +2905,57 @@ textarea {
     font-size: 110px;
   }
 }
+
+/* ============================================================
+   v1.2.1 · pop-up plate: edge-safe captions + guided tour
+   ============================================================ */
+.stage-caption {
+  max-width: 230px;
+}
+/* edge stages align their captions inward so nothing clips */
+.stage-caption.cap-left {
+  left: 0;
+  transform: translateX(0) translateY(4px);
+}
+.stage-caption.cap-right {
+  left: auto;
+  right: 0;
+  transform: translateX(0) translateY(4px);
+}
+.popup-stage:hover .stage-caption.cap-left,
+.popup-stage:focus-within .stage-caption.cap-left,
+.popup-stage.touring .stage-caption.cap-left {
+  transform: translateX(0) translateY(0);
+}
+.popup-stage:hover .stage-caption.cap-right,
+.popup-stage:focus-within .stage-caption.cap-right,
+.popup-stage.touring .stage-caption.cap-right {
+  transform: translateX(0) translateY(0);
+}
+.stage-caption.cap-left::before {
+  left: 75px;
+  right: auto;
+}
+.stage-caption.cap-right::before {
+  left: auto;
+  right: 75px;
+}
+
+/* guided tour: the highlighted stage warms up while its caption shows */
+.popup-stage.touring {
+  background: var(--paper);
+  border-color: var(--ch-acc, var(--blueprint));
+}
+.popup-stage.touring .stage-caption {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.popup-stage.touring .stage-caption.cap-left {
+  transform: translateX(0) translateY(0);
+}
+.popup-stage.touring .stage-caption.cap-right {
+  transform: translateX(0) translateY(0);
+}
+.popup-stage.touring .snum {
+  background: var(--ch-acc, var(--blueprint));
+}

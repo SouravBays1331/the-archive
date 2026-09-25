@@ -399,12 +399,40 @@ function PopUpScene({
   const n = stages.length;
   const acc = accentFor(volume.domain);
   const [reduced, setReduced] = useState(false);
+  const [tour, setTour] = useState(-1);
+  const tourTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
   useEffect(() => {
     setReduced(window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   }, []);
 
+  // guided tour: on reveal, highlight each stage in order so the hover
+  // captions announce themselves; any pointer interaction cancels it.
+  useEffect(() => {
+    tourTimers.current.forEach(clearTimeout);
+    tourTimers.current = [];
+    if (!revealed || reduced) {
+      setTour(-1);
+      return;
+    }
+    for (let i = 0; i < n; i++) {
+      tourTimers.current.push(setTimeout(() => setTour(i), 1400 + i * 850));
+    }
+    tourTimers.current.push(setTimeout(() => setTour(-1), 1400 + n * 850));
+    return () => {
+      tourTimers.current.forEach(clearTimeout);
+      tourTimers.current = [];
+    };
+  }, [revealed, reduced, n]);
+
   return (
-    <div className={`popup-scene${revealed ? ' revealed' : ' stage-flat'}`}>
+    <div
+      className={`popup-scene${revealed ? ' revealed' : ' stage-flat'}`}
+      onMouseEnter={() => {
+        tourTimers.current.forEach(clearTimeout);
+        tourTimers.current = [];
+        setTour(-1);
+      }}
+    >
       {/* ghost numeral fills the upper plate — like a classic drawing sheet */}
       <div className="plate-ghost" aria-hidden="true">
         {stages.length}
@@ -412,8 +440,8 @@ function PopUpScene({
       <div className="fold-line" aria-hidden="true" />
       <svg className="popup-track" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true">
         {stages.slice(0, -1).map((s, i) => {
-          const x1 = 6 + (i * 88) / Math.max(1, n - 1) + 6;
-          const x2 = 6 + ((i + 1) * 88) / Math.max(1, n - 1) - 6;
+          const x1 = 15 + (i * 70) / Math.max(1, n - 1) + 5;
+          const x2 = 15 + ((i + 1) * 70) / Math.max(1, n - 1) - 5;
           return (
             <g key={s.id}>
               <line x1={x1} y1={4} x2={x2} y2={4} stroke={acc} strokeOpacity="0.45" strokeWidth="0.35" />
@@ -427,11 +455,11 @@ function PopUpScene({
         })}
       </svg>
       {stages.map((s, i) => {
-        const pct = 6 + (i * 88) / Math.max(1, n - 1);
+        const pct = 15 + (i * 70) / Math.max(1, n - 1);
         return (
           <div
             key={s.id}
-            className="popup-stage"
+            className={`popup-stage${tour === i ? ' touring' : ''}`}
             style={{
               left: `calc(${pct}% - 75px)`,
               bottom: `calc(24% + ${(i % 2) * 5}%)`,
@@ -447,7 +475,9 @@ function PopUpScene({
               {s.agent && <AgentFigure />}
               {s.label}
             </span>
-            <span className="stage-caption">
+            <span
+              className={`stage-caption${i === 0 ? ' cap-left' : ''}${i === n - 1 ? ' cap-right' : ''}`}
+            >
               {(edition === 'tech' ? s.captionTech : undefined) ?? s.captionExec}
             </span>
           </div>
@@ -632,7 +662,6 @@ function VellumOverlay({ volume, revealed }: { volume: Volume; revealed: boolean
           </div>
         ))}
       </div>
-      <div className="vellum-hint">drag the vellum — engineering ↔ business view</div>
     </div>
   );
 }
