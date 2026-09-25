@@ -80,30 +80,7 @@ function StreamLine({
 }
 
 export default function LegendCard() {
-  const [lit, setLit] = useState(0); // rows revealed on the folded card
   const [open, setOpen] = useState(false);
-  const [hintUp, setHintUp] = useState(false);
-
-  // startup: the card writes itself onto the shelf
-  useEffect(() => {
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduced) {
-      setLit(ROWS.length);
-      setHintUp(true);
-      return;
-    }
-    const iv = setInterval(() => {
-      setLit((n) => {
-        if (n >= ROWS.length) {
-          clearInterval(iv);
-          setTimeout(() => setHintUp(true), 400);
-          return n;
-        }
-        return n + 1;
-      });
-    }, 340);
-    return () => clearInterval(iv);
-  }, []);
 
   // scroll overlay: esc closes
   useEffect(() => {
@@ -115,14 +92,16 @@ export default function LegendCard() {
     return () => window.removeEventListener('keydown', onKey);
   }, [open]);
 
+  // the furled scroll standing at the end of the tier — click to unroll
   return (
     <>
       <aside
-        className={`legend-card legend-live${hintUp ? ' hint-up' : ''}`}
-        aria-label="How to read the shelf — click to unroll the full guide"
-        onClick={() => setOpen(true)}
+        className="legend-scroll"
         role="button"
         tabIndex={0}
+        aria-label="Field guide — click to unroll"
+        title="How to read the shelf — click to unroll"
+        onClick={() => setOpen(true)}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
@@ -130,20 +109,13 @@ export default function LegendCard() {
           }
         }}
       >
-        <h4>
-          <StreamLine text="How to read the shelf" active cps={30} />
-        </h4>
-        <dl>
-          {ROWS.map(([term, desc], i) => (
-            <React.Fragment key={term}>
-              <StreamTerm term={term} active={i < lit} />
-              <dd style={{ opacity: i < lit ? 1 : 0, transition: 'opacity 400ms ease 150ms' }}>
-                {desc}
-              </dd>
-            </React.Fragment>
-          ))}
-        </dl>
-        <div className="unfold-hint">click to unroll the full guide ↗</div>
+        <div className="ls-tube">
+          <i className="ls-coil" aria-hidden="true" />
+          <i className="ls-ribbon" aria-hidden="true" />
+        </div>
+        <div className="ls-tag">
+          <StreamLine text="FIELD GUIDE" active cps={22} />
+        </div>
       </aside>
 
       {open && <LegendScroll onClose={() => setOpen(false)} />}

@@ -888,46 +888,102 @@ textarea {
   white-space: nowrap;
 }
 
-.legend-card {
+/* the furled scroll standing at the end of the tier — click to unroll */
+.legend-scroll {
   align-self: flex-end;
-  margin: 0 4px 2px 14px;
-  width: 168px;
+  margin: 0 6px 2px 20px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  transform: rotate(-1.2deg);
+  cursor: pointer;
+  transition:
+    transform var(--d-base) var(--ease-lift),
+    filter var(--d-base) var(--ease-standard);
+}
+.legend-scroll:hover {
+  transform: rotate(-0.2deg) translateY(-4px);
+  filter: brightness(1.05);
+}
+.legend-scroll:focus-visible {
+  outline: 2px solid var(--lamp);
+  outline-offset: 6px;
+  border-radius: 12px;
+}
+/* the rolled parchment tube */
+.ls-tube {
+  position: relative;
+  width: 42px;
+  height: 146px;
+  border-radius: 21px / 16px;
+  background: linear-gradient(90deg, #c4b489 0%, #f0e6cc 26%, #fbf5e4 45%, #eee2c2 68%, #ab9868 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(120, 90, 40, 0.28),
+    inset 0 -12px 14px -10px rgba(120, 90, 40, 0.5),
+    0 14px 24px -14px rgba(0, 0, 0, 0.85);
+}
+/* spiral coil where the paper rolls over at the top */
+.ls-coil {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 46px;
+  height: 17px;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at center,
+    #8a744a 0 16%,
+    #ece0bd 16% 32%,
+    #ab9464 32% 50%,
+    #f4ecd4 50% 68%,
+    #9c854f 68% 84%,
+    #cec09a 84% 100%
+  );
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.35),
+    0 2px 4px rgba(0, 0, 0, 0.4);
+}
+/* the tie ribbon */
+.ls-ribbon {
+  position: absolute;
+  top: 56%;
+  left: -3px;
+  right: -3px;
+  height: 10px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #c2453a 0%, #a03229 55%, #7c241e 100%);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+/* hanging paper tag */
+.ls-tag {
+  position: relative;
   background: var(--paper-2);
   color: var(--ink);
-  border-radius: 3px;
-  padding: 12px 13px;
-  box-shadow: 0 14px 30px -14px rgba(0, 0, 0, 0.8);
-  transform: rotate(-1.6deg);
-}
-.legend-card h4 {
   font-family: var(--font-mono), monospace;
-  font-size: 10px;
+  font-size: 8px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  margin-bottom: 8px;
-  color: var(--ink-soft);
-}
-.legend-card dl {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 4px 8px;
-  font-size: 10.5px;
-  line-height: 1.35;
-  color: var(--ink-soft);
-}
-.legend-card dt {
-  font-family: var(--font-mono), monospace;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--ink);
-}
-.legend-card .swatch {
-  display: inline-block;
-  width: 9px;
-  height: 9px;
+  padding: 5px 8px 4px;
   border-radius: 2px;
-  vertical-align: -1px;
-  margin-right: 4px;
+  box-shadow: 0 6px 14px -8px rgba(0, 0, 0, 0.8);
+  white-space: nowrap;
+  min-height: 21px;
+  display: flex;
+  align-items: center;
+}
+.ls-tag::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  width: 1px;
+  height: 9px;
+  background: rgba(211, 199, 168, 0.75);
 }
 
 .room-foot {
@@ -2491,7 +2547,7 @@ textarea {
   .stamps {
     grid-template-columns: 1fr;
   }
-  .legend-card {
+  .legend-scroll {
     display: none;
   }
   .wall {
@@ -2695,7 +2751,7 @@ textarea {
     transform: none;
   }
 }
-.shelf-intro .legend-card,
+.shelf-intro .legend-scroll,
 .shelf-intro .bookend {
   animation: fadein 600ms var(--ease-standard) 900ms both;
 }
@@ -2963,34 +3019,6 @@ textarea {
 /* ============================================================
    v1.3 · legend scroll (streaming field guide) + per-tab session
    ============================================================ */
-.legend-card.legend-live {
-  cursor: pointer;
-  transition:
-    transform var(--d-base) var(--ease-lift),
-    box-shadow var(--d-base) var(--ease-standard);
-}
-.legend-card.legend-live:hover {
-  transform: rotate(-0.4deg) translateY(-4px);
-  box-shadow: 0 20px 44px -16px rgba(0, 0, 0, 0.9);
-}
-.legend-card.legend-live:focus-visible {
-  outline: 2px solid var(--lamp);
-  outline-offset: 3px;
-}
-.legend-card .unfold-hint {
-  margin-top: 9px;
-  font-family: var(--font-mono), monospace;
-  font-size: 8.5px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink-soft);
-  opacity: 0;
-  transition: opacity var(--d-slow) var(--ease-standard);
-}
-.legend-card.hint-up .unfold-hint {
-  opacity: 0.85;
-}
-
 .caret {
   display: inline-block;
   width: 6px;
@@ -3086,15 +3114,17 @@ textarea {
 }
 .scroll-close {
   position: absolute;
-  top: -12px;
-  right: -46px;
-  width: 30px;
-  height: 30px;
+  top: -16px;
+  right: -58px;
+  z-index: 6; /* clear of the rods and finials */
+  width: 32px;
+  height: 32px;
   border-radius: 8px;
-  border: 1px solid rgba(255, 217, 160, 0.35);
+  border: 1px solid rgba(255, 217, 160, 0.5);
   color: var(--text-mid);
-  background: rgba(23, 23, 26, 0.85);
+  background: rgba(23, 23, 26, 0.92);
   font-size: 13px;
+  box-shadow: 0 6px 16px -8px rgba(0, 0, 0, 0.8);
   transition: color var(--d-quick) var(--ease-standard), border-color var(--d-quick) var(--ease-standard);
 }
 .scroll-close:hover {
@@ -3222,8 +3252,8 @@ textarea {
 }
 @media (max-width: 640px) {
   .scroll-close {
-    right: -10px;
-    top: -16px;
+    right: -14px;
+    top: -18px;
   }
   .scroll-rod {
     margin: 0 -16px;
