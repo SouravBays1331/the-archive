@@ -154,8 +154,37 @@ export default function LegendCard() {
 function LegendScroll({ onClose }: { onClose: () => void }) {
   const total = 4 + ROWS.length + GLYPHS.length + KEYS.length;
   const [step, setStep] = useState(0);
+  const [unrolled, setUnrolled] = useState(false);
+  const paperRef = useRef<HTMLDivElement>(null);
 
+  // the unroll: parchment grows out of the top rod, the bottom rod rides its edge
   useEffect(() => {
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const paper = paperRef.current;
+    if (!paper) return;
+    if (reduced) {
+      setUnrolled(true);
+      return;
+    }
+    const target = paper.scrollHeight;
+    paper.style.height = '0px';
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        paper.style.transition = 'height 950ms cubic-bezier(0.65, 0, 0.35, 1)';
+        paper.style.height = `${target}px`;
+      });
+    });
+    const t = setTimeout(() => {
+      paper.style.transition = '';
+      paper.style.height = 'auto';
+      setUnrolled(true);
+    }, 1020);
+    return () => clearTimeout(t);
+  }, []);
+
+  // ink streams in once the scroll is open
+  useEffect(() => {
+    if (!unrolled) return;
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reduced) {
       setStep(total);
@@ -171,7 +200,7 @@ function LegendScroll({ onClose }: { onClose: () => void }) {
       });
     }, 160);
     return () => clearInterval(iv);
-  }, [total]);
+  }, [unrolled, total]);
 
   // reveal schedule (explicit, pure):
   const titleAt = 0;
@@ -184,53 +213,59 @@ function LegendScroll({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="scroll-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="scroll-panel" role="dialog" aria-label="How to read the shelf">
-        <button className="overlay-close" aria-label="Close" onClick={onClose}>
+      <div className="scroll-stage">
+        <div className="scroll-rod" aria-hidden="true" />
+        <div className="scroll-paper" ref={paperRef} role="dialog" aria-label="How to read the shelf">
+          <div className="scroll-inner">
+            <div className="scroll-crest">
+              <StreamLine text="HOW TO READ THE SHELF" active={step >= titleAt} as="h3" cps={26} />
+              <p className="scroll-sub">
+                <StreamLine text="a field guide to the collection" active={step >= subAt} cps={34} />
+              </p>
+            </div>
+
+            <dl className="scroll-rows">
+              {ROWS.map(([term, desc], i) => (
+                <div className={`scroll-row${step >= rowAt(i) ? ' on' : ''}`} key={term}>
+                  <StreamTerm term={term} active={step >= rowAt(i)} />
+                  <dd>{desc}</dd>
+                </div>
+              ))}
+            </dl>
+
+            <h4 className="scroll-h4">
+              <StreamLine text="THE TECHNIQUE GLYPHS" active={step >= glyphHeadAt} cps={30} />
+            </h4>
+            <div className="glyph-grid">
+              {GLYPHS.map(([id, label], i) => (
+                <div className={`glyph-cell${step >= glyphAt(i) ? ' on' : ''}`} key={id}>
+                  <TechniqueGlyph id={id} size={19} />
+                  <span>{label}</span>
+                </div>
+              ))}
+            </div>
+
+            <h4 className="scroll-h4">
+              <StreamLine text="AT THE DESK" active={step >= keyHeadAt} cps={30} />
+            </h4>
+            <dl className="scroll-rows keys">
+              {KEYS.map(([k, v], i) => (
+                <div className={`scroll-row${step >= keyAt(i) ? ' on' : ''}`} key={k}>
+                  <dt>
+                    <kbd>{k}</kbd>
+                  </dt>
+                  <dd>{v}</dd>
+                </div>
+              ))}
+            </dl>
+
+            <p className="scroll-foot">The archive remembers what you read — bookmarks grow with depth.</p>
+          </div>
+        </div>
+        <div className="scroll-rod" aria-hidden="true" />
+        <button className="scroll-close" aria-label="Close" onClick={onClose}>
           ✕
         </button>
-        <div className="scroll-crest">
-          <StreamLine text="HOW TO READ THE SHELF" active={step >= titleAt} as="h3" cps={26} />
-          <p className="scroll-sub">
-            <StreamLine text="a field guide to the collection" active={step >= subAt} cps={34} />
-          </p>
-        </div>
-
-        <dl className="scroll-rows">
-          {ROWS.map(([term, desc], i) => (
-            <div className={`scroll-row${step >= rowAt(i) ? ' on' : ''}`} key={term}>
-              <StreamTerm term={term} active={step >= rowAt(i)} />
-              <dd>{desc}</dd>
-            </div>
-          ))}
-        </dl>
-
-        <h4 className="scroll-h4">
-          <StreamLine text="THE TECHNIQUE GLYPHS" active={step >= glyphHeadAt} cps={30} />
-        </h4>
-        <div className="glyph-grid">
-          {GLYPHS.map(([id, label], i) => (
-            <div className={`glyph-cell${step >= glyphAt(i) ? ' on' : ''}`} key={id}>
-              <TechniqueGlyph id={id} size={19} />
-              <span>{label}</span>
-            </div>
-          ))}
-        </div>
-
-        <h4 className="scroll-h4">
-          <StreamLine text="AT THE DESK" active={step >= keyHeadAt} cps={30} />
-        </h4>
-        <dl className="scroll-rows keys">
-          {KEYS.map(([k, v], i) => (
-            <div className={`scroll-row${step >= keyAt(i) ? ' on' : ''}`} key={k}>
-              <dt>
-                <kbd>{k}</kbd>
-              </dt>
-              <dd>{v}</dd>
-            </div>
-          ))}
-        </dl>
-
-        <p className="scroll-foot">The archive remembers what you read — bookmarks grow with depth.</p>
       </div>
     </div>
   );

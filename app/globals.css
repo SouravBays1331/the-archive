@@ -3018,46 +3018,88 @@ textarea {
   padding: 20px;
   animation: fadein var(--d-base) var(--ease-standard) both;
 }
-.scroll-panel {
+.scroll-stage {
   position: relative;
   width: min(470px, 94vw);
-  max-height: 88vh;
-  overflow-y: auto;
-  background: var(--paper);
-  color: var(--ink);
-  border-radius: 4px;
-  padding: 30px 30px 24px;
-  box-shadow: 0 60px 120px -40px rgba(0, 0, 0, 0.95);
-  animation: scrollunroll 620ms var(--ease-emphasized) both;
+  display: flex;
+  flex-direction: column;
+  transform-origin: 50% 0;
+  animation: scrollsway 9s var(--ease-standard) infinite alternate;
 }
-/* rolled ends of the unrolled scroll */
-.scroll-panel::before,
-.scroll-panel::after {
-  content: '';
-  position: sticky;
-  position: absolute;
-  left: 6%;
-  right: 6%;
-  height: 9px;
-  border-radius: 99px;
-  background: linear-gradient(180deg, #ddd6c6, #b7ae99);
-  box-shadow: 0 2px 6px rgba(27, 26, 24, 0.35);
-}
-.scroll-panel::before {
-  top: -5px;
-}
-.scroll-panel::after {
-  bottom: -5px;
-}
-@keyframes scrollunroll {
+@keyframes scrollsway {
   from {
-    opacity: 0;
-    transform: scaleY(0.25) translateY(-30px);
+    transform: rotate(-0.35deg);
   }
   to {
-    opacity: 1;
-    transform: none;
+    transform: rotate(0.35deg);
   }
+}
+/* turned wooden rods with brass finials */
+.scroll-rod {
+  position: relative;
+  z-index: 2;
+  height: 16px;
+  margin: 0 -26px;
+  border-radius: 9px;
+  background: linear-gradient(180deg, #7a4a30 0%, #56331e 45%, #37200f 100%);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 220, 170, 0.4),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.55),
+    0 4px 10px -4px rgba(0, 0, 0, 0.7);
+}
+.scroll-rod::before,
+.scroll-rod::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 19px;
+  height: 30px;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 35% 28%, #f4e0b0 0%, #dcb872 30%, #96703a 65%, #4a3413 100%);
+  border: 3px solid rgba(46, 26, 12, 0.9);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+.scroll-rod::before {
+  left: -22px;
+}
+.scroll-rod::after {
+  right: -22px;
+}
+/* the parchment sheet — unrolls from behind the top rod */
+.scroll-paper {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  margin: -7px 0;
+  border-radius: 0 0 4px 4px;
+  background: linear-gradient(180deg, #f8f1e0 0%, #f2e7ca 55%, #ecdcba 100%);
+  color: var(--ink);
+  box-shadow:
+    inset 0 14px 18px -12px rgba(120, 90, 40, 0.5),
+    inset 0 -14px 18px -12px rgba(120, 90, 40, 0.45),
+    inset 0 0 70px rgba(186, 146, 86, 0.16),
+    0 30px 60px -30px rgba(0, 0, 0, 0.9);
+}
+.scroll-inner {
+  padding: 32px 34px 24px;
+}
+.scroll-close {
+  position: absolute;
+  top: -12px;
+  right: -46px;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 217, 160, 0.35);
+  color: var(--text-mid);
+  background: rgba(23, 23, 26, 0.85);
+  font-size: 13px;
+  transition: color var(--d-quick) var(--ease-standard), border-color var(--d-quick) var(--ease-standard);
+}
+.scroll-close:hover {
+  color: var(--lamp);
+  border-color: var(--lamp);
 }
 .scroll-crest {
   border-bottom: 1px solid var(--ink);
@@ -3176,5 +3218,20 @@ textarea {
 @media (max-width: 640px) {
   .glyph-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 640px) {
+  .scroll-close {
+    right: -10px;
+    top: -16px;
+  }
+  .scroll-rod {
+    margin: 0 -16px;
+  }
+  .scroll-rod::before {
+    left: -14px;
+  }
+  .scroll-rod::after {
+    right: -14px;
   }
 }
