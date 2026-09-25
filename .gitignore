@@ -1,0 +1,12 @@
+node_modules/
+.next/
+out/
+.env*.local
+.env
+data/
+*.tsbuildinfo
+next-env.d.ts
+_shots/
+server.log
+cookies.txt
+redactions.local.txt

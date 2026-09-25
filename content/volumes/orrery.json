@@ -1,0 +1,126 @@
+{
+  "slug": "orrery",
+  "codename": "ORRERY",
+  "objectType": "boxed",
+  "domain": "simulation",
+  "sectorTag": "Semiconductors",
+  "year": 2026,
+  "status": "in-progress",
+  "complexity": 4,
+  "impactTier": 2,
+  "techniques": ["simulation", "language", "vision"],
+  "hook": "Generates firmware-simulator peripherals straight from hardware specs — plan first, code second.",
+  "tier": "guest",
+
+  "problem": {
+    "statementExec": "A new hardware architecture needs a software simulator before the hardware exists — and that simulator gates everything behind it. Each module's behaviour is fully written down in a dense specification. Transcribing it into simulator code is slow, repetitive work that needs a developer who can hold the whole spec in their head.",
+    "statementTech": "The simulator is built as one peripheral model per hardware module, and each spec chapter is dense with register maps, bit-field tables, signal lists and timing diagrams. The work is mechanically derivable but cognitively expensive — the effort is in reading it exhaustively, not inventing anything. A naive model call is unreliable: the spec is hostile to naive retrieval, register semantics determine correctness, and hallucinating a register or a state is unacceptable.",
+    "painPoints": [
+      "Slow, repetitive spec-to-code transcription on the critical path",
+      "Needs developers who hold both spec and conventions in mind",
+      "Style drift across many near-identical peripheral modules"
+    ],
+    "marginNotes": [
+      "9 pipeline stages · every intermediate reviewable",
+      "prompts versioned like code (some at v6)",
+      "spec figures and timing diagrams passed as images"
+    ]
+  },
+
+  "approach": {
+    "summaryExec": "The pipeline reproduces what a senior developer does: parse the spec, break the module into features, map every register to the behaviour that touches it, plan the state machine in plain language — review that — and only then generate code against the house templates.",
+    "stages": [
+      {
+        "id": "parse",
+        "label": "Parse",
+        "captionExec": "The spec chapter is read the way an engineer reads it — sections, tables and diagrams kept in context.",
+        "captionTech": "Section-hierarchy reconstruction from numbering, page-furniture and cross-reference cleanup; tables and figures stay attached to the right section and are staged for retrieval."
+      },
+      {
+        "id": "features",
+        "label": "Break down",
+        "captionExec": "The module is split into features, each tied to the registers it touches.",
+        "captionTech": "Feature breakdown maps every functional area to the register bit-fields it interacts with, with the reason for each mapping."
+      },
+      {
+        "id": "callbacks",
+        "label": "Derive",
+        "captionExec": "Register access rules decide what the code must do — looked up, never guessed.",
+        "captionTech": "A hard-coded access-type → semantics → admissible-callback lookup table keeps deterministic knowledge out of the model."
+      },
+      {
+        "id": "plan",
+        "label": "Plan",
+        "captionExec": "The state machine is planned in natural language and reviewed before any code exists.",
+        "captionTech": "Plan template captures states, triggers, transitions, guards and per-state actions — separating 'did we understand the hardware?' from 'did we write valid code?'."
+      },
+      {
+        "id": "generate",
+        "label": "Generate",
+        "captionExec": "Code is written into the team's existing architecture — not a new invention per module.",
+        "captionTech": "Behaviour code generated against checked-in house templates, with existing dependencies injected and a hard instruction not to redefine what exists."
+      },
+      {
+        "id": "review",
+        "label": "Review",
+        "captionExec": "A review pass checks the generated code — and any change is a targeted edit, not a regeneration.",
+        "captionTech": "LLM review with code-to-skeleton compression so a whole codebase fits in review context; functionality-modification stage makes targeted changes to existing implementations."
+      }
+    ],
+    "edges": [
+      ["parse", "features"],
+      ["features", "callbacks"],
+      ["callbacks", "plan"],
+      ["plan", "generate"],
+      ["generate", "review"]
+    ]
+  },
+
+  "engine": {
+    "blueprint": [
+      { "id": "s3", "label": "Spec store", "x": 0.1, "y": 0.1, "kind": "store" },
+      { "id": "pipeline", "label": "Stage pipeline", "x": 0.42, "y": 0.1, "kind": "orchestration" },
+      { "id": "prompts", "label": "Prompt library", "x": 0.1, "y": 0.45, "kind": "store" },
+      { "id": "llm", "label": "Reasoning (multimodal)", "x": 0.42, "y": 0.45, "kind": "model" },
+      { "id": "gw", "label": "Model gateway", "x": 0.74, "y": 0.45, "kind": "guard" },
+      { "id": "tmpl", "label": "House templates", "x": 0.74, "y": 0.1, "kind": "store" },
+      { "id": "review", "label": "Review stage", "x": 0.42, "y": 0.8, "kind": "guard" },
+      { "id": "out", "label": "Compilable code", "x": 0.1, "y": 0.8, "kind": "component" }
+    ],
+    "parts": [
+      { "component": "Spec pipeline", "role": "structure-aware parsing, staging", "family": "Custom document pipeline" },
+      { "component": "Prompt library", "role": "versioned per-stage context", "family": "Prompt-as-source-code" },
+      { "component": "Templates", "role": "the architectural contract", "family": "Checked-in code skeletons" },
+      { "component": "Reasoning stage", "role": "planning and code generation", "family": "Multimodal LLM via gateway" },
+      { "component": "Review stage", "role": "spec-grounded code review", "family": "LLM review + skeleton compression" },
+      { "component": "Target tests", "role": "unit tests for generated code", "family": "Standard unit-test framework" }
+    ],
+    "evaluation": "Every intermediate is a reviewable artifact, so when output is wrong you know which stage was wrong. Generated code must compile into the existing simulator, and the review stage checks behaviour against cited spec excerpts rather than plausibility."
+  },
+
+  "value": {
+    "before": "Each peripheral module was hand-transcribed from its spec chapter — slow, style-drifting work by scarce developers, sitting on the critical path to firmware and hardware bring-up.",
+    "after": "A staged pipeline emits compilable code against the house architecture, with the state machine reviewed before code exists and every generated line traceable to a cited spec excerpt.",
+    "metrics": [
+      { "value": "9", "label": "stages, each a reviewable artifact", "sourceNote": "internal only: pipeline design" },
+      { "value": "compile", "label": "the deliverable — code that builds, not prose", "sourceNote": "internal only: refactor arc" },
+      { "value": "plan-first", "label": "state machine reviewed before any code", "sourceNote": "internal only: design decision" },
+      { "value": "1-line", "label": "model migration, by construction", "sourceNote": "internal only: invocation layer" }
+    ]
+  },
+
+  "roi": {
+    "inputs": [
+      { "id": "modules", "label": "Modules to model per quarter", "default": 8, "min": 1, "max": 40 },
+      { "id": "days", "label": "Developer-days per module today", "default": 5, "min": 1, "max": 20 },
+      { "id": "share", "label": "Share of effort automatable", "default": 0.5, "min": 0.1, "max": 0.9, "step": 0.05 },
+      { "id": "rate", "label": "Loaded daily cost", "default": 640, "min": 200, "max": 2000, "unit": "USD" }
+    ],
+    "formula": "value = modules * days * share * rate",
+    "outputs": ["value"],
+    "footnote": "Illustrative estimate based on outcomes observed in comparable engagements. Not a quote."
+  },
+
+  "related": ["augur", "meridian"],
+  "cta": { "variant": "explore" }
+}

@@ -1,0 +1,126 @@
+{
+  "slug": "meridian",
+  "codename": "MERIDIAN",
+  "objectType": "binder",
+  "domain": "operations",
+  "sectorTag": "Precision manufacturing",
+  "year": 2025,
+  "status": "delivered",
+  "complexity": 3,
+  "impactTier": 3,
+  "techniques": ["signal", "optimisation"],
+  "hook": "Replaced a daily manual calibration analysis with an unattended pipeline that reports before the shift starts.",
+  "tier": "guest",
+
+  "problem": {
+    "statementExec": "Every morning began with hours of hand-built statistics. New production batches had to be validated against a reference batch across 18 tolerance parameters — and a drifting batch only got caught if someone found the time to look.",
+    "statementTech": "Each morning, engineers manually pulled multi-database test data, applied filters, ran an 18-parameter tolerance comparison of new production batches against the reference batch, and compiled reports by hand. Results depended entirely on who was on duty, batch switches required config edits and a redeploy, and alerts depended on someone noticing the data.",
+    "painPoints": [
+      "Hours of expert engineering time consumed every single day",
+      "A batch switch meant config files, scripts and a redeployment",
+      "Alerts fired only when a human happened to notice"
+    ],
+    "marginNotes": [
+      "18 tolerance parameters · 2 analysis windows",
+      "runs unattended at 07:00 · results by ~07:15",
+      "30 days of history · tens of millions of rows"
+    ]
+  },
+
+  "approach": {
+    "summaryExec": "We replaced the entire manual workflow with three connected parts: a web dashboard that runs the process, an unattended daily pipeline that does the analysis, and a watchdog that guarantees the analysis itself is healthy.",
+    "stages": [
+      {
+        "id": "configure",
+        "label": "Configure",
+        "captionExec": "Engineers add or retire batch pairs in a 30-second web form — no code, no config files, no redeploy.",
+        "captionTech": "Batch assignments persist in a managed relational store; the next scheduled run picks them up automatically."
+      },
+      {
+        "id": "pull",
+        "label": "Pull",
+        "captionExec": "Every morning the pipeline gathers 30 days of production test data on its own.",
+        "captionTech": "Parallel-chunked queries against the production data warehouse handle tens of millions of records."
+      },
+      {
+        "id": "gate",
+        "label": "Sufficiency gate",
+        "captionExec": "If not enough new data has arrived, yesterday's result carries forward instead of a shaky new one.",
+        "captionTech": "Below the new-sample threshold the run is skipped and the prior result is re-recorded, keeping every day statistically meaningful."
+      },
+      {
+        "id": "analyse",
+        "label": "Analyse",
+        "captionExec": "Two views every day: the full cumulative comparison, and a 24-hour early-warning window — across all 18 parameters.",
+        "captionTech": "Cumulative (full batch history vs reference) and daily (last 24h) windows evaluated against per-parameter tolerances, with two alert scenarios: simultaneous breach, and 3 consecutive daily breaches."
+      },
+      {
+        "id": "alert",
+        "label": "Alert",
+        "captionExec": "The moment a threshold is breached, the owning team gets a notification with the proposed calibration values.",
+        "captionTech": "Team-messaging webhooks carry batch names, violating parameters and proposed calibration values — no one has to check anything."
+      },
+      {
+        "id": "watchdog",
+        "label": "Watchdog",
+        "captionExec": "A second automated job checks the first one every morning, so a silent failure can never hide.",
+        "captionTech": "Post-run health monitor verifies execution, stored results and logs; failures raise an immediate alert before the business day is lost."
+      }
+    ],
+    "edges": [
+      ["configure", "pull"],
+      ["pull", "gate"],
+      ["gate", "analyse"],
+      ["analyse", "alert"],
+      ["analyse", "watchdog"]
+    ]
+  },
+
+  "engine": {
+    "blueprint": [
+      { "id": "ui", "label": "Batch dashboard", "x": 0.1, "y": 0.08, "kind": "component" },
+      { "id": "db", "label": "Assignments store", "x": 0.42, "y": 0.08, "kind": "store" },
+      { "id": "cron", "label": "Scheduler", "x": 0.14, "y": 0.42, "kind": "orchestration" },
+      { "id": "fetch", "label": "Parallel fetchers", "x": 0.45, "y": 0.42, "kind": "component" },
+      { "id": "stats", "label": "Analysis engine", "x": 0.78, "y": 0.42, "kind": "component" },
+      { "id": "wh", "label": "Data warehouse", "x": 0.45, "y": 0.75, "kind": "store" },
+      { "id": "notify", "label": "Alert hooks", "x": 0.82, "y": 0.14, "kind": "component" },
+      { "id": "health", "label": "Health monitor", "x": 0.14, "y": 0.75, "kind": "guard" }
+    ],
+    "parts": [
+      { "component": "Web dashboard", "role": "control centre · batch management & results viewer", "family": "Server-rendered web app" },
+      { "component": "Scheduler", "role": "unattended daily runs", "family": "Linux cron" },
+      { "component": "Data access", "role": "30-day history, chunked parallel reads", "family": "Cloud data warehouse connector" },
+      { "component": "Analysis engine", "role": "cumulative + daily tolerance evaluation", "family": "Python statistics" },
+      { "component": "Configuration store", "role": "assignments, results, run history", "family": "Managed relational database" },
+      { "component": "Notifications", "role": "threshold breach alerts", "family": "Team messaging webhooks" },
+      { "component": "Health monitor", "role": "watchdog on the pipeline itself", "family": "Scheduled job + log scan" }
+    ],
+    "evaluation": "Deployed on the production site and run daily across multiple concurrent batch pairs. During rollout, engineers shadowed the automated results against manual calculations until the numbers matched; the health monitor and full run history keep every result auditable after the fact."
+  },
+
+  "value": {
+    "before": "Hours of expert work each morning, results scattered in spreadsheets and emails, batch switches requiring developer involvement, and failures surfacing only when someone looked.",
+    "after": "A single dashboard, an unattended pipeline with results ready before the shift starts, 30-second batch switches, and instant alerts the moment any parameter drifts out of tolerance.",
+    "metrics": [
+      { "value": "07:15", "label": "results ready — before the shift reviews data", "sourceNote": "internal only: pipeline completion time" },
+      { "value": "30 s", "label": "to switch a batch pair (was a redeployment)", "sourceNote": "internal only: form submission flow" },
+      { "value": "0", "label": "manual analysis steps in the daily workflow", "sourceNote": "internal only: process comparison" },
+      { "value": "18", "label": "parameters watched across two windows, every day", "sourceNote": "internal only: tolerance matrix" }
+    ]
+  },
+
+  "roi": {
+    "inputs": [
+      { "id": "hrs", "label": "Engineer-hours spent per day on manual analysis", "default": 2, "min": 0.5, "max": 8, "step": 0.5 },
+      { "id": "rate", "label": "Loaded hourly cost", "default": 85, "min": 30, "max": 300, "unit": "USD" },
+      { "id": "days", "label": "Working days per month", "default": 21, "min": 15, "max": 23 }
+    ],
+    "formula": "hours = hrs * days; value = hours * rate",
+    "outputs": ["hours", "value"],
+    "footnote": "Illustrative estimate based on outcomes observed in comparable engagements. Not a quote."
+  },
+
+  "related": ["augur", "parallax"],
+  "cta": { "variant": "demo" }
+}

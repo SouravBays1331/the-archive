@@ -1,0 +1,119 @@
+{
+  "slug": "almanac",
+  "codename": "ALMANAC",
+  "objectType": "hardcover",
+  "domain": "finance",
+  "sectorTag": "Financial services",
+  "year": 2026,
+  "status": "delivered",
+  "complexity": 5,
+  "impactTier": 3,
+  "techniques": ["retrieval", "language", "simulation"],
+  "hook": "Turned 300+ SQL views into a knowledge graph you can question, simulate and explain.",
+  "tier": "guest",
+
+  "problem": {
+    "statementExec": "The planning logic — margins, freight, crew costs, depreciation — lives in hundreds of interdependent SQL views. Answering one innocent question, 'where does this number come from?', takes an engineer days.",
+    "statementTech": "Large financial planning systems accumulate hundreds of interdependent database views encoding business logic. Two bottlenecks dominate: lineage questions require manually parsing raw SQL for days, and what-if modelling of parameter changes (a freight-rate shift, a volume drop) ripples through hundreds of intermediate calculations that no one can trace safely.",
+    "painPoints": [
+      "Days of engineering time to trace a single number's lineage",
+      "What-if modelling confined to fragile, disconnected spreadsheets",
+      "No safe way to test how one change ripples to the bottom line"
+    ],
+    "marginNotes": [
+      "300+ views parsed via AST into a graph",
+      "DAG propagation recomputes every dependent node",
+      "AI tools exposed read-only over the graph"
+    ]
+  },
+
+  "approach": {
+    "summaryExec": "We turned the whole view estate into a living dependency graph, then put two things on top: a simulator that shows how any parameter change cascades to profit, and a conversational analyst that answers lineage questions in plain English.",
+    "stages": [
+      {
+        "id": "parse",
+        "label": "Parse",
+        "captionExec": "A scheduled job reads every view and works out what depends on what.",
+        "captionTech": "SQL AST parsing extracts column-level dependencies — CTEs, subqueries, window functions — into structured dependency maps."
+      },
+      {
+        "id": "graph",
+        "label": "Graph",
+        "captionExec": "All of it becomes one map: views, inputs, metrics, and how they feed each other.",
+        "captionTech": "A property graph stores View, Calculation, Input, Scenario and Metric nodes with explicit FEEDS / DEPENDS_ON / CALCULATES edges, auto-synced from live definitions."
+      },
+      {
+        "id": "simulate",
+        "label": "Simulate",
+        "captionExec": "Move a slider — a rate, a volume — and watch the effect cascade to net profit in real time.",
+        "captionTech": "Graph-traversal propagation recomputes dependent node values down the DAG when inputs change; scenarios run side by side with delta tracking."
+      },
+      {
+        "id": "explain",
+        "label": "Explain",
+        "captionExec": "Ask why profit moved and the assistant walks the graph to show the exact path.",
+        "captionTech": "An MCP-enabled conversational agent answers via grounded tool calls — schema discovery, relationship lookups, Cypher execution — in read-only mode."
+      },
+      {
+        "id": "serve",
+        "label": "Serve",
+        "captionExec": "Analysts get a self-service workspace: chat, scenario controls and waterfall charts. Zero SQL.",
+        "captionTech": "Analyst dashboard with conversational chat, variable sliders, scenario selectors and dynamic waterfall visualisations of revenue and profit deltas."
+      }
+    ],
+    "edges": [
+      ["parse", "graph"],
+      ["graph", "simulate"],
+      ["graph", "explain"],
+      ["simulate", "serve"],
+      ["explain", "serve"]
+    ]
+  },
+
+  "engine": {
+    "blueprint": [
+      { "id": "sync", "label": "AST sync job", "x": 0.08, "y": 0.1, "kind": "component" },
+      { "id": "src", "label": "Source views", "x": 0.08, "y": 0.78, "kind": "store" },
+      { "id": "neo", "label": "Graph engine", "x": 0.4, "y": 0.45, "kind": "store" },
+      { "id": "prop", "label": "Propagation engine", "x": 0.72, "y": 0.45, "kind": "component" },
+      { "id": "mcp", "label": "Tool server", "x": 0.4, "y": 0.1, "kind": "guard" },
+      { "id": "llm", "label": "Reasoning agent", "x": 0.72, "y": 0.1, "kind": "model" },
+      { "id": "ui", "label": "Analyst workspace", "x": 0.4, "y": 0.8, "kind": "component" }
+    ],
+    "parts": [
+      { "component": "Parser & sync", "role": "views → dependency maps, scheduled", "family": "SQL AST parsing pipeline" },
+      { "component": "Graph store", "role": "lineage and calculation structure", "family": "Property graph database" },
+      { "component": "Simulation engine", "role": "DAG propagation on parameter change", "family": "Topological traversal service" },
+      { "component": "Tool server", "role": "grounded, read-only AI access", "family": "Model Context Protocol server" },
+      { "component": "Reasoning agent", "role": "lineage answers, variance explanations", "family": "LLM via gateway" },
+      { "component": "Analyst UI", "role": "chat, scenarios, waterfalls", "family": "React SPA" }
+    ],
+    "evaluation": "Lineage answers were validated against hand-traced queries across representative views; simulation deltas were reconciled against manual recalculations for sample scenarios. The graph auto-syncs on a schedule, so documentation can never drift from the live database."
+  },
+
+  "value": {
+    "before": "Engineers reading raw SQL for days to answer simple questions; analysts guessing at variances; what-if modelling that meant rebuilding fragile spreadsheets by hand.",
+    "after": "A living map of the entire planning logic: lineage in seconds from a chat box, scenarios compared side by side, and every variance explained down the exact graph path that caused it.",
+    "metrics": [
+      { "value": "days → s", "label": "to answer a lineage question", "sourceNote": "internal only: before/after task timing" },
+      { "value": "300+", "label": "views mapped into one dependency graph", "sourceNote": "internal only: graph node count" },
+      { "value": "0 SQL", "label": "required for business-team self-service", "sourceNote": "internal only: user workflow" },
+      { "value": "3-way", "label": "scenario comparison with delta tracking", "sourceNote": "internal only: scenario engine" }
+    ]
+  },
+
+  "roi": {
+    "inputs": [
+      { "id": "analysts", "label": "Business analysts asking lineage questions", "default": 12, "min": 2, "max": 60 },
+      { "id": "perweek", "label": "Questions per analyst per week", "default": 3, "min": 1, "max": 15 },
+      { "id": "hrs", "label": "Engineer-hours consumed per question today", "default": 6, "min": 1, "max": 24 },
+      { "id": "rate", "label": "Loaded hourly cost", "default": 120, "min": 40, "max": 350, "unit": "USD" }
+    ],
+    "formula": "hours = analysts * perweek * hrs * 4.33; value = hours * rate",
+    "outputs": ["hours", "value"],
+    "footnote": "Illustrative estimate based on outcomes observed in comparable engagements. Not a quote."
+  },
+
+  "related": ["parallax", "meridian"],
+  "cta": { "variant": "partnership" }
+}

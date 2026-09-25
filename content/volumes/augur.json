@@ -1,0 +1,127 @@
+{
+  "slug": "augur",
+  "codename": "AUGUR",
+  "objectType": "dossier",
+  "domain": "risk",
+  "sectorTag": "Hardware engineering",
+  "year": 2026,
+  "status": "in-progress",
+  "complexity": 5,
+  "impactTier": 3,
+  "techniques": ["agents", "signal", "retrieval"],
+  "hook": "An AI agent that reads firmware failure evidence like a senior engineer — and shows its work.",
+  "tier": "guest",
+
+  "problem": {
+    "statementExec": "Before a firmware build ships, it runs through huge automated test suites — and a meaningful number of tests fail. Every failure used to need a senior engineer to read the evidence and write the verdict. The bottleneck was never the tests. It was the handful of people who can read a trace.",
+    "statementTech": "Manual failure analysis means reading multiple log formats and binary traces, decoding internal event and stop codes, cross-referencing firmware source at the exact build under test, applying tribal knowledge about subsystem ownership, searching the tracker for duplicates, then deciding root cause, classification, owner — and writing a structured report. Hours of expert time per failure, with FA capacity scaling with headcount while test volume scales with compute.",
+    "painPoints": [
+      "Hours of scarce expert time consumed per failure",
+      "Tribal knowledge locked in a few senior heads",
+      "Inconsistent classification and ownership routing"
+    ],
+    "marginNotes": [
+      "three architecture generations, each forced by a measured failure",
+      "~15 governed pipeline stages · verdict frozen before precedent search",
+      "source read at the pinned build, never current HEAD"
+    ]
+  },
+
+  "approach": {
+    "summaryExec": "We made the agent the analyst: senior engineers' procedure became versioned skills, mechanical work stayed deterministic, and the whole pipeline is governed by a state machine so quality never depends on the model choosing to behave.",
+    "stages": [
+      {
+        "id": "prepare",
+        "label": "Prepare",
+        "captionExec": "Evidence is gathered and fixed in place before any reasoning starts.",
+        "captionTech": "Case preparation hashes the evidence set and pins source revisions — everything later reads via immutable object access."
+      },
+      {
+        "id": "investigate",
+        "label": "Investigate",
+        "captionExec": "The agent reads the logs, then the source — with the access it needs, and nothing more.",
+        "captionTech": "State-machine stages scope tool access per phase: log investigation sees case artifacts only; source investigation gets read-only approved repos at the pinned revision."
+      },
+      {
+        "id": "synthesise",
+        "label": "Synthesise",
+        "captionExec": "Findings are assembled into a causal picture, with every claim tied to evidence.",
+        "captionTech": "Evidence validation runs deterministic citation and entailment checks; a causal graph is built with edge admissibility verified in code."
+      },
+      {
+        "id": "classify",
+        "label": "Classify",
+        "captionExec": "Candidate categories are scored blind, so the model can't anchor on a front-runner.",
+        "captionTech": "All five classification lanes are evaluated without revealing the current leader; severity is derived from structured fields, never argued in prose; confidence is adjudicated before validation."
+      },
+      {
+        "id": "precedent",
+        "label": "Precedent",
+        "captionExec": "Only after reaching its own verdict may the agent look at past cases.",
+        "captionTech": "Duplicate search runs behind a lock gate whose integrity re-verifies; it may identify duplicates but never revise the frozen conclusion."
+      },
+      {
+        "id": "report",
+        "label": "Report",
+        "captionExec": "A structured report — or an honest 'unresolved', never a confident guess.",
+        "captionTech": "Schema-validated rendering from a single format source; low confidence completes as a labelled unlocked report — abstention is a first-class output."
+      }
+    ],
+    "edges": [
+      ["prepare", "investigate"],
+      ["investigate", "synthesise"],
+      ["synthesise", "classify"],
+      ["classify", "precedent"],
+      ["precedent", "report"]
+    ]
+  },
+
+  "engine": {
+    "blueprint": [
+      { "id": "queue", "label": "Case queue", "x": 0.1, "y": 0.12, "kind": "store" },
+      { "id": "fsm", "label": "State machine", "x": 0.42, "y": 0.12, "kind": "orchestration" },
+      { "id": "agent", "label": "Reasoning agent", "x": 0.74, "y": 0.12, "kind": "model" },
+      { "id": "skills", "label": "Skill library", "x": 0.74, "y": 0.45, "kind": "store" },
+      { "id": "toolkit", "label": "Deterministic toolkit", "x": 0.42, "y": 0.45, "kind": "component" },
+      { "id": "kb", "label": "Knowledge lookup", "x": 0.1, "y": 0.45, "kind": "store" },
+      { "id": "gates", "label": "Validation gates", "x": 0.42, "y": 0.78, "kind": "guard" },
+      { "id": "reports", "label": "Report UI", "x": 0.74, "y": 0.78, "kind": "component" }
+    ],
+    "parts": [
+      { "component": "Case queue", "role": "intake from the report UI", "family": "Managed relational queue" },
+      { "component": "Agent runtime", "role": "governed multi-stage sessions", "family": "Vendor agent SDK + state machine" },
+      { "component": "Skill library", "role": "procedural knowledge of senior engineers", "family": "~25 versioned skill documents" },
+      { "component": "Toolkit", "role": "parsing, code resolution, routing, rendering", "family": "Installable CLI called in-session" },
+      { "component": "Knowledge lookup", "role": "codes, specs, tracker search", "family": "MCP servers, read-only" },
+      { "component": "Validation gates", "role": "citations, schema, anti-fabrication", "family": "Deterministic pre-render checks" },
+      { "component": "Reports", "role": "delivery to the failure-analysis UI", "family": "Object storage + internal UI" }
+    ],
+    "evaluation": "Model-as-judge scoring against senior-engineer ground truth on a golden set across seven verticals; model migrations run as formal A/B UAT against the production baseline. A gated skill-optimisation loop promotes a revision only when it strictly beats the incumbent on held-out cases."
+  },
+
+  "value": {
+    "before": "Every failure queued behind a senior engineer: hours of expert reading per case, inconsistent verdicts, and knowledge that lived in people's heads instead of in testable artifacts.",
+    "after": "Unattended triage for the recurring cases, with precedent cited, uncertainty labelled, and only genuinely novel failures escalated — plus the experts' procedure captured as versioned, testable skills.",
+    "metrics": [
+      { "value": "unattended", "label": "queue-driven triage for recurring failures", "sourceNote": "internal only: architecture" },
+      { "value": "~15", "label": "governed stages — quality by construction", "sourceNote": "internal only: state machine" },
+      { "value": "frozen", "label": "verdict reached before precedent is consulted", "sourceNote": "internal only: anti-anchoring control" },
+      { "value": "honest", "label": "low confidence completes as a labelled report", "sourceNote": "internal only: abstention design" }
+    ]
+  },
+
+  "roi": {
+    "inputs": [
+      { "id": "failures", "label": "Test failures needing analysis per week", "default": 40, "min": 5, "max": 400 },
+      { "id": "mins", "label": "Senior-engineer minutes per manual analysis", "default": 90, "min": 20, "max": 300 },
+      { "id": "share", "label": "Share of cases solvable without escalation", "default": 0.6, "min": 0.1, "max": 0.9, "step": 0.05 },
+      { "id": "rate", "label": "Loaded hourly cost", "default": 130, "min": 40, "max": 350, "unit": "USD" }
+    ],
+    "formula": "hours = failures * share * mins / 60 * 4.33; value = hours * rate",
+    "outputs": ["hours", "value"],
+    "footnote": "Illustrative estimate based on outcomes observed in comparable engagements. Not a quote."
+  },
+
+  "related": ["orrery", "lodestar"],
+  "cta": { "variant": "pilot" }
+}

@@ -1,0 +1,118 @@
+{
+  "slug": "lodestar",
+  "codename": "LODESTAR",
+  "objectType": "notebook",
+  "domain": "growth",
+  "sectorTag": "Marketing technology",
+  "year": 2026,
+  "status": "in-progress",
+  "complexity": 3,
+  "impactTier": 2,
+  "techniques": ["signal", "agents", "forecasting"],
+  "hook": "Measures how brands show up inside AI answers — then tells them exactly how to improve it.",
+  "tier": "guest",
+
+  "problem": {
+    "statementExec": "Your next customer may never Google you. They'll ask an AI — and the AI will name someone. If that someone isn't you, there is no page two, no ad slot, and today's analytics won't even tell you it happened.",
+    "statementTech": "Buyers increasingly act on a single synthesized answer from AI engines. Brands can be absent from that answer and never know: no measurement, no explanation of why competitors get recommended, and monitoring-only tools that stop at a score instead of closing the loop to action.",
+    "painPoints": [
+      "No measurement of brand visibility inside AI answers",
+      "No explanation when competitors win the recommendation",
+      "Existing tools show a score and stop there"
+    ],
+    "marginNotes": [
+      "4 engines probed weekly",
+      "multi-run sampling · confidence intervals",
+      "prompt universe: 50–150 buyer questions"
+    ]
+  },
+
+  "approach": {
+    "summaryExec": "One loop, repeated weekly: map the questions real buyers ask, probe every major AI engine, score your visibility against named competitors, and turn the gaps into a prioritised action plan — then prove the movement next cycle.",
+    "stages": [
+      {
+        "id": "map",
+        "label": "Map",
+        "captionExec": "Generate the questions your buyers actually ask, across every intent stage.",
+        "captionTech": "Prompt-universe generation (50–150 realistic buyer prompts) with customer approval before any probing begins."
+      },
+      {
+        "id": "probe",
+        "label": "Probe",
+        "captionExec": "Run those questions weekly across the major AI answer engines.",
+        "captionTech": "Scheduled multi-run sampling per prompt per cycle for statistically honest results; full audit trail per run."
+      },
+      {
+        "id": "score",
+        "label": "Score",
+        "captionExec": "See exactly where you stand: visibility, citations, sentiment, share of voice.",
+        "captionTech": "Mentions, citations, position and sentiment extracted per run; weekly rollups carry confidence intervals, never single snapshots."
+      },
+      {
+        "id": "fix",
+        "label": "Fix",
+        "captionExec": "Every weak spot comes with a reason and a prioritised fix.",
+        "captionTech": "Gap analysis across three action lanes: where to earn citations (source gaps), what content to build (content gaps), and technical readiness for AI crawlers."
+      },
+      {
+        "id": "remeasure",
+        "label": "Re-measure",
+        "captionExec": "The loop repeats weekly — actions are re-measured, progress is proven.",
+        "captionTech": "Before/after proof loops and alerts on visibility drops or new competitor entries."
+      }
+    ],
+    "edges": [
+      ["map", "probe"],
+      ["probe", "score"],
+      ["score", "fix"],
+      ["fix", "remeasure"],
+      ["remeasure", "probe"]
+    ]
+  },
+
+  "engine": {
+    "blueprint": [
+      { "id": "gen", "label": "Prompt universe", "x": 0.1, "y": 0.1, "kind": "model" },
+      { "id": "sched", "label": "Probing scheduler", "x": 0.42, "y": 0.1, "kind": "orchestration" },
+      { "id": "extract", "label": "Extraction", "x": 0.74, "y": 0.1, "kind": "component" },
+      { "id": "agg", "label": "Aggregation", "x": 0.74, "y": 0.45, "kind": "store" },
+      { "id": "advise", "label": "Advisor", "x": 0.42, "y": 0.45, "kind": "model" },
+      { "id": "audit", "label": "Audit trail", "x": 0.1, "y": 0.45, "kind": "store" },
+      { "id": "alerts", "label": "Alerts", "x": 0.42, "y": 0.8, "kind": "component" }
+    ],
+    "parts": [
+      { "component": "Prompt universe", "role": "buyer-question generation", "family": "LLM generation + human approval" },
+      { "component": "Probing scheduler", "role": "weekly multi-engine runs", "family": "Engine APIs + SERP providers" },
+      { "component": "Extractor", "role": "mentions, citations, sentiment", "family": "Structured parsing service" },
+      { "component": "Aggregator", "role": "visibility, citation share, share of voice", "family": "Statistical rollups with confidence intervals" },
+      { "component": "Advisor", "role": "source / content / technical actions", "family": "Gap-analysis engine" },
+      { "component": "Audit trail", "role": "model version + date per run", "family": "Run-log store" }
+    ],
+    "evaluation": "Currently in design-partner pilots. Every recommendation is traced to a measured gap, and every action is re-measured in the following weekly cycle — the platform's own before/after loop is the acceptance test."
+  },
+
+  "value": {
+    "before": "Invisibility in AI answers is invisible: lost deals never appear in pipelines or attribution reports, and nobody knows which sources the AI trusted instead of you.",
+    "after": "A weekly, statistically honest picture of where you stand in every major AI engine — and a prioritised plan that tells you why competitors win and what to do about it.",
+    "metrics": [
+      { "value": "4", "label": "AI engines probed on a weekly cadence", "sourceNote": "internal only: engine matrix" },
+      { "value": "CI", "label": "confidence intervals on every headline score", "sourceNote": "internal only: sampling design" },
+      { "value": "3", "label": "action lanes: sources, content, technical", "sourceNote": "internal only: recommendation engine" },
+      { "value": "7 d", "label": "proof loop — every action re-measured", "sourceNote": "internal only: cycle design" }
+    ]
+  },
+
+  "roi": {
+    "inputs": [
+      { "id": "deal", "label": "Average deal size", "default": 25000, "min": 2000, "max": 250000, "unit": "USD" },
+      { "id": "leads", "label": "Extra qualified leads per month from AI discovery", "default": 2, "min": 0, "max": 20 },
+      { "id": "close", "label": "Close rate on those leads", "default": 0.2, "min": 0.02, "max": 0.8, "step": 0.01 }
+    ],
+    "formula": "value = deal * leads * close",
+    "outputs": ["value"],
+    "footnote": "Illustrative estimate based on outcomes observed in comparable engagements. Not a quote."
+  },
+
+  "related": ["augur", "parallax"],
+  "cta": { "variant": "demo" }
+}

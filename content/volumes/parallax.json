@@ -1,0 +1,126 @@
+{
+  "slug": "parallax",
+  "codename": "PARALLAX",
+  "objectType": "hardcover",
+  "domain": "operations",
+  "sectorTag": "Supply-chain planning",
+  "year": 2026,
+  "status": "delivered",
+  "complexity": 4,
+  "impactTier": 2,
+  "techniques": ["agents", "language"],
+  "hook": "An agent that validates forecast files end-to-end — hours of line-by-line comparison down to minutes.",
+  "tier": "guest",
+
+  "problem": {
+    "statementExec": "Every planning cycle, two families of forecast spreadsheets have to agree. Today, analysts open them side by side and hunt mismatches by hand — hundreds of rows, many sheets, dozens of quarterly periods.",
+    "statementTech": "Baseline planning files and integration plan files must reconcile across multiple business modules, each with its own file layout, sheet conventions and quirks. The comparison is manual, error-prone, inconsistent between teams, and unscalable as forecast cycles multiply.",
+    "painPoints": [
+      "Several hours of analyst time per validation",
+      "The human eye silently misses mismatches",
+      "Every module demanded its own manual procedure"
+    ],
+    "marginNotes": [
+      "8+ module variants · one specialised skill each",
+      "cell-level comparison to 10 decimal places",
+      "up to 2 parallel agentic jobs"
+    ]
+  },
+
+  "approach": {
+    "summaryExec": "We built an agentic platform that runs the whole validation on its own — it reads the files, works out how they map to each other, compares them to the last decimal, and hands back a colour-coded workbook and a summary.",
+    "stages": [
+      {
+        "id": "route",
+        "label": "Route",
+        "captionExec": "The system recognises which business module a file belongs to and picks the right specialist.",
+        "captionTech": "Keyword-based skill router dispatches to a module-specific sub-agent with its own rules, logic and alias configuration."
+      },
+      {
+        "id": "explore",
+        "label": "Explore",
+        "captionExec": "The agent opens both files and learns their structure — nothing is hard-coded.",
+        "captionTech": "The agent writes and runs throwaway inspection scripts: header rows, sheet names, period labels, wide-format pivots, scale factors."
+      },
+      {
+        "id": "plan",
+        "label": "Plan",
+        "captionExec": "It reasons about how the two files correspond before comparing anything.",
+        "captionTech": "Multi-step reasoning over column mappings, key columns, period normalisation and unit scaling, adapted per file pair."
+      },
+      {
+        "id": "compare",
+        "label": "Compare",
+        "captionExec": "A full, precise comparison runs — down to the tenth decimal place.",
+        "captionTech": "The agent generates pandas/openpyxl comparison code, executes it, and produces a colour-coded result workbook."
+      },
+      {
+        "id": "verify",
+        "label": "Verify",
+        "captionExec": "The agent checks its own output before calling the job done.",
+        "captionTech": "Self-verification reads the generated workbook back and confirms completeness before reporting."
+      },
+      {
+        "id": "report",
+        "label": "Report",
+        "captionExec": "You get the workbook plus a written summary — and nothing else is left behind.",
+        "captionTech": "Summary generated strictly from the output file; temporary scripts and intermediates are cleaned up automatically."
+      }
+    ],
+    "edges": [
+      ["route", "explore"],
+      ["explore", "plan"],
+      ["plan", "compare"],
+      ["compare", "verify"],
+      ["verify", "report"]
+    ]
+  },
+
+  "engine": {
+    "blueprint": [
+      { "id": "ui", "label": "Submission UI", "x": 0.1, "y": 0.1, "kind": "component" },
+      { "id": "api", "label": "Orchestrator API", "x": 0.4, "y": 0.1, "kind": "orchestration" },
+      { "id": "queue", "label": "Job queue", "x": 0.72, "y": 0.1, "kind": "store" },
+      { "id": "agent", "label": "Reasoning agent", "x": 0.4, "y": 0.45, "kind": "model" },
+      { "id": "skills", "label": "Skill library", "x": 0.1, "y": 0.45, "kind": "store" },
+      { "id": "sandbox", "label": "Code execution", "x": 0.72, "y": 0.45, "kind": "component" },
+      { "id": "s3", "label": "File storage", "x": 0.4, "y": 0.8, "kind": "store" },
+      { "id": "db", "label": "Job metadata", "x": 0.72, "y": 0.8, "kind": "store" }
+    ],
+    "parts": [
+      { "component": "Orchestrator API", "role": "routing, async jobs, status polling", "family": "Managed API service" },
+      { "component": "Skill agents", "role": "per-module domain rules", "family": "Versioned skill documents" },
+      { "component": "Reasoning agent", "role": "plans, codes, verifies, reports", "family": "Frontier model via gateway" },
+      { "component": "Code execution", "role": "generated comparison scripts", "family": "Sandboxed Python runtime" },
+      { "component": "Job queue", "role": "async workers, parallel jobs", "family": "Managed relational database" },
+      { "component": "File storage", "role": "inputs and result workbooks", "family": "Object storage" },
+      { "component": "Web UI", "role": "upload, tracking, download", "family": "React SPA" }
+    ],
+    "evaluation": "Each module skill was validated against known-good manual comparisons across 8+ module variants, with mismatches verified at cell level. Every job is logged with full timestamps and agent execution traces, so any result can be replayed and audited."
+  },
+
+  "value": {
+    "before": "Analysts spent hours per validation, errors slipped through, output format depended on who ran the check, and each new module meant writing a new manual procedure.",
+    "after": "A single submission runs the whole validation autonomously: cell-level precision, a standardised colour-coded workbook, a written summary, and coverage of every module variant through specialised skills.",
+    "metrics": [
+      { "value": "hrs → min", "label": "per validation, end to end", "sourceNote": "internal only: before/after timing" },
+      { "value": "10 dp", "label": "cell-level comparison precision", "sourceNote": "internal only: comparison engine" },
+      { "value": "8+", "label": "module variants handled by specialised skills", "sourceNote": "internal only: skill library" },
+      { "value": "0", "label": "manual scripting needed per new cycle", "sourceNote": "internal only: workflow" }
+    ]
+  },
+
+  "roi": {
+    "inputs": [
+      { "id": "validations", "label": "Validations per week", "default": 5, "min": 1, "max": 40 },
+      { "id": "mins", "label": "Analyst minutes per manual validation", "default": 180, "min": 30, "max": 480 },
+      { "id": "rate", "label": "Loaded hourly cost", "default": 85, "min": 30, "max": 300, "unit": "USD" }
+    ],
+    "formula": "hours = validations * mins / 60 * 4.33; value = hours * rate",
+    "outputs": ["hours", "value"],
+    "footnote": "Illustrative estimate based on outcomes observed in comparable engagements. Not a quote."
+  },
+
+  "related": ["almanac", "augur"],
+  "cta": { "variant": "pilot" }
+}
