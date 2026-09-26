@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Forms</title>
+  </head>
+  <body>
+    <!-- Deploy-time blueprint only. Netlify scans this static file for form fields.
+         The checkout card posts here; visitors never see this page. -->
+    <form name="checkout" data-netlify="true" netlify-honeypot="bot-field" hidden>
+      <input type="hidden" name="form-name" value="checkout" />
+      <input name="bot-field" />
+      <input type="text" name="name" />
+      <input type="text" name="company" />
+      <input type="email" name="email" />
+      <select name="interest">
+        <option value="demo">Demo</option>
+        <option value="pilot">Pilot</option>
+        <option value="partnership">Partnership</option>
+        <option value="exploring">Just exploring</option>
+      </select>
+      <input type="text" name="volumes" />
+      <input type="text" name="volumes_label" />
+      <textarea name="note"></textarea>
+    </form>
+  </body>
+</html>

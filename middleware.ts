@@ -39,5 +39,7 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+  // __forms.html is a static Netlify Forms target in /public. It must skip this
+  // middleware so a checkout POST reaches Netlify instead of the sign-in redirect.
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|__forms\\.html).*)'],
 };
