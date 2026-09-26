@@ -7,6 +7,9 @@ import { Edition, useArchive } from '@/lib/store';
 import { accentFor } from '@/lib/tokens';
 import { track } from '@/lib/analytics';
 import { buildChapters, ChapterProps } from '@/components/book/chapters';
+import { useScene } from '@/lib/scene-store';
+import { play } from '@/lib/sound';
+import SoundToggle from '@/components/SoundToggle';
 
 interface RelatedMeta {
   slug: string;
@@ -87,13 +90,43 @@ function SpreadReader({
   const router = useRouter();
   const accent = accentFor(volume.domain);
   const [idx, setIdx] = useState(0);
-  const [anim, setAnim] = useState<null | 'fwd' | 'back'>(null);
   const [revealed, setRevealed] = useState(false);
   const [hintSeen, setHintSeen] = useState(true);
+  const [turn, setTurn] = useState<null | {
+    dir: 1 | -1;
+    p: number;
+    mode: 'scrub' | 'commit';
+    target: number;
+    from: number;
+  }>(null);
   const lockRef = useRef(false);
-  const wheelAcc = useRef(0);
   const touchStart = useRef<{ x: number; y: number } | null>(null);
-  const enterTs = useRef(Date.now());
+  const idleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const rafRef = useRef(0);
+  const idxRef = useRef(0);
+
+  useEffect(() => {
+    idxRef.current = idx;
+  }, [idx]);
+  const turnRef = useRef<null | {
+    dir: 1 | -1;
+    p: number;
+    mode: 'scrub' | 'commit';
+    target: number;
+    from: number;
+  }>(null);
+  useEffect(() => {
+    turnRef.current = turn;
+  }, [turn]);
+
+  // the 3D canvas pauses while reading; on return it settles the volume home
+  useEffect(() => {
+    useScene.getState().setPhase('reading');
+    return () => {
+      useScene.getState().setPhase('shelf');
+      useScene.getState().setLastOpened(volume.slug);
+    };
+  }, [volume.slug]);
 
   // arriving from the shelf: release the room's exit transition
   useEffect(() => {
@@ -119,15 +152,26 @@ function SpreadReader({
   useEffect(() => {
     setRevealed(false);
     const t = setTimeout(() => setRevealed(true), 60);
-    enterTs.current = Date.now();
     const ch = chapters[idx];
     if (ch) {
       track('chapter_view', { slug: volume.slug, chapter: ch.id, edition, dwell_ms: 0 });
       markVisited(volume.slug, Math.min(1, (idx + 1) / chapters.length));
+      if (ch.id === 'value') {
+        const t = setTimeout(() => play('stamp'), 900);
+        return () => clearTimeout(t);
+      }
     }
     return () => clearTimeout(t);
   }, [idx, chapters, edition, volume.slug, markVisited]);
 
+  const finalize = useCallback((t: { dir: 1 | -1; target: number }) => {
+    setIdx(t.target);
+    setTurn(null);
+    lockRef.current = false;
+    window.dispatchEvent(new CustomEvent('archive:turnscrub-end'));
+  }, []);
+
+  // full committed turn (keys, buttons, swipe) — 700ms ease
   const go = useCallback(
     (dir: 1 | -1) => {
       if (lockRef.current) return;
@@ -135,35 +179,62 @@ function SpreadReader({
         window.sessionStorage.setItem('archive.turned', '1');
       } catch {}
       setHintSeen(true);
-      setIdx((cur) => {
-        const next = cur + dir;
-        if (next < 0 || next >= chapters.length) return cur;
-        lockRef.current = true;
-        setAnim(dir === 1 ? 'fwd' : 'back');
-        setTimeout(() => {
-          setIdx(next);
-          setAnim(null);
-          lockRef.current = false;
-        }, 700);
-        return cur;
-      });
+      const cur = idxRef.current;
+      const target = cur + dir;
+      if (target < 0 || target >= chapters.length) return;
+      lockRef.current = true;
+      play('turn');
+      const t = { dir, p: 0, mode: 'commit' as const, target, from: cur };
+      setTurn(t);
+      const start = performance.now();
+      const step = (now: number) => {
+        const q = Math.min(1, (now - start) / 700);
+        const eased = q < 0.5 ? 4 * q * q * q : 1 - Math.pow(-2 * q + 2, 3) / 2;
+        setTurn((c) => (c ? { ...c, p: eased } : c));
+        if (chapters[t.from]?.id === 'problem' && dir === 1) {
+          window.dispatchEvent(new CustomEvent('archive:turnscrub', { detail: { p: eased } }));
+        }
+        if (q < 1) {
+          rafRef.current = requestAnimationFrame(step);
+        } else {
+          finalize(t);
+        }
+      };
+      rafRef.current = requestAnimationFrame(step);
     },
-    [chapters.length],
+    [chapters, finalize],
   );
 
-  const jumpTo = useCallback(
-    (i: number) => {
-      if (lockRef.current || i === idx) return;
-      lockRef.current = true;
-      setAnim(i > idx ? 'fwd' : 'back');
-      setTimeout(() => {
-        setIdx(i);
-        setAnim(null);
-        lockRef.current = false;
-      }, 500);
+  // snap a scrubbed turn to the nearest page
+  const commitScrub = useCallback(
+    (t: { dir: 1 | -1; p: number; target: number; from: number }) => {
+      const targetP = t.p > 0.45 ? 1 : 0;
+      play('turn');
+      const start = performance.now();
+      const from = t.p;
+      const step = (now: number) => {
+        const q = Math.min(1, (now - start) / 240);
+        const p = from + (targetP - from) * q;
+        setTurn((cur) => (cur ? { ...cur, p } : cur));
+        if (q < 1) {
+          rafRef.current = requestAnimationFrame(step);
+        } else if (targetP === 1) {
+          finalize(t);
+        } else {
+          setTurn(null);
+          lockRef.current = false;
+          window.dispatchEvent(new CustomEvent('archive:turnscrub-end'));
+        }
+      };
+      rafRef.current = requestAnimationFrame(step);
     },
-    [idx],
+    [finalize],
   );
+
+  const jumpTo = useCallback((i: number) => {
+    if (lockRef.current) return;
+    setIdx(i);
+  }, []);
 
   // in-volume jumps (e.g. ledger → checkout)
   useEffect(() => {
@@ -195,26 +266,49 @@ function SpreadReader({
     return () => window.removeEventListener('keydown', onKey);
   }, [go, jumpTo, chapters.length, router]);
 
-  // wheel = scrub-lite: accumulate and commit as full turns
+  // wheel = scrub (spec §10: scroll scrubs, release snaps)
   useEffect(() => {
-    let decay: ReturnType<typeof setTimeout> | null = null;
     function onWheel(e: WheelEvent) {
       const t = e.target as HTMLElement;
       if (t.closest('.vellum') || t.closest('.librarian-panel') || t.closest('.tray-panel')) return;
-      wheelAcc.current += e.deltaY;
-      if (decay) clearTimeout(decay);
-      decay = setTimeout(() => {
-        wheelAcc.current = 0;
-      }, 300);
-      if (Math.abs(wheelAcc.current) > 110) {
-        const dir = wheelAcc.current > 0 ? 1 : -1;
-        wheelAcc.current = 0;
-        go(dir as 1 | -1);
+      const cur = useScene.getState();
+      if (cur.phase !== 'reading') return;
+
+      if (!turnRef.current) {
+        const dir: 1 | -1 = e.deltaY > 0 ? 1 : -1;
+        const from = idxRef.current;
+        const target = from + dir;
+        if (target < 0 || target >= chapters.length) return;
+        lockRef.current = true;
+        const nt = { dir, p: 0, mode: 'scrub' as const, target, from };
+        turnRef.current = nt;
+        setTurn(nt);
+      } else if (turnRef.current.mode === 'scrub') {
+        const nt = {
+          ...turnRef.current,
+          p: Math.max(0.02, Math.min(0.92, turnRef.current.p + Math.abs(e.deltaY) / 900)),
+        };
+        turnRef.current = nt;
+        setTurn(nt);
+        if (chapters[nt.from]?.id === 'problem') {
+          window.dispatchEvent(
+            new CustomEvent('archive:turnscrub', {
+              detail: { p: nt.dir === 1 ? nt.p : 1 - nt.p },
+            }),
+          );
+        }
       }
+      if (idleRef.current) clearTimeout(idleRef.current);
+      idleRef.current = setTimeout(() => {
+        if (turnRef.current && turnRef.current.mode === 'scrub') {
+          window.dispatchEvent(new CustomEvent('archive:turnscrub-end'));
+          commitScrub(turnRef.current);
+        }
+      }, 260);
     }
     window.addEventListener('wheel', onWheel, { passive: true });
     return () => window.removeEventListener('wheel', onWheel);
-  }, [go]);
+  }, [chapters, commitScrub]);
 
   // clamp when the chapter list shrinks (e.g. tech → exec reflow)
   useEffect(() => {
@@ -252,8 +346,8 @@ function SpreadReader({
   }
 
   const ch = chapters[idx];
-  const under = anim === 'fwd' ? chapters[idx + 1] : null;
-  const over = anim === 'back' ? chapters[idx - 1] : null;
+  const under = turn && turn.dir === 1 ? chapters[turn.target] : null;
+  const over = turn && turn.dir === -1 ? chapters[turn.target] : null;
 
   return (
     <div className="reader" style={{ ['--ch-acc' as string]: accent }}>
@@ -305,20 +399,31 @@ function SpreadReader({
                 className="page-corner left"
                 onClick={() => go(-1)}
                 aria-label="Previous page"
-                tabIndex={anim ? -1 : 0}
+                tabIndex={turn ? -1 : 0}
               >
                 ‹
               </button>
             )}
           </div>
-          <div className={`page right${anim === 'fwd' ? ' turning' : ''}`}>
+          <div
+            className="page right"
+            style={
+              turn && turn.dir === 1
+                ? {
+                    transform: `rotateY(${-180 * turn.p}deg)`,
+                    transformOrigin: 'left center',
+                    backfaceVisibility: 'hidden',
+                  }
+                : undefined
+            }
+          >
             {ch.right(props)}
             <button
               className="page-corner right"
               onClick={() => go(1)}
               disabled={idx === chapters.length - 1}
               aria-label="Next page"
-              tabIndex={anim ? -1 : 0}
+              tabIndex={turn ? -1 : 0}
             >
               ›
             </button>
@@ -327,7 +432,16 @@ function SpreadReader({
         {over && (
           <div className="spread" style={{ position: 'absolute', inset: 0, zIndex: 7 }} aria-hidden="true">
             <div className="page left">{over.left?.(props) ?? null}</div>
-            <div className="page right turning-back">{over.right(props)}</div>
+            <div
+              className="page right"
+              style={{
+                transform: `rotateY(${-180 * (1 - turn!.p)}deg)`,
+                transformOrigin: 'left center',
+                backfaceVisibility: 'hidden',
+              }}
+            >
+              {over.right(props)}
+            </div>
           </div>
         )}
       </div>
@@ -369,18 +483,19 @@ function SpreadReader({
           {ch.title}
         </span>
         <div className="navbtns">
-          <button className="navbtn" onClick={() => go(-1)} disabled={idx === 0 || !!anim}>
+          <button className="navbtn" onClick={() => go(-1)} disabled={idx === 0 || !!turn}>
             ← Turn
           </button>
           <button
             className="navbtn"
             onClick={() => go(1)}
-            disabled={idx === chapters.length - 1 || !!anim}
+            disabled={idx === chapters.length - 1 || !!turn}
           >
             Turn →
           </button>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <SoundToggle />
           {!hintSeen && (
             <span className="mono turn-hint" aria-hidden="true">
               ← → or scroll to turn

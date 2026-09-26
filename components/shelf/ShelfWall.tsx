@@ -9,20 +9,12 @@ import { useArchive } from '@/lib/store';
 import { track } from '@/lib/analytics';
 import LibrarianPanel from './LibrarianPanel';
 import LegendCard from './LegendCard';
+import { useScene } from '@/lib/scene-store';
+import { play, startRoomTone, stopRoomTone, useSoundOn } from '@/lib/sound';
+import SoundToggle from '@/components/SoundToggle';
 
-export interface ShelfVolume {
-  slug: string;
-  codename: string;
-  objectType: 'hardcover' | 'binder' | 'dossier' | 'notebook' | 'boxed';
-  domain: string;
-  sectorTag: string;
-  year: number;
-  status: 'delivered' | 'in-progress';
-  complexity: number;
-  impactTier: number;
-  techniques: string[];
-  hook: string;
-}
+export type { ShelfVolume } from '@/lib/scene-store';
+import type { ShelfVolume } from '@/lib/scene-store';
 
 type Lens = 'industry' | 'capability' | 'impact' | 'newest';
 const LENSES: { id: Lens; label: string }[] = [
@@ -65,8 +57,12 @@ export default function ShelfWall({
 }) {
   const router = useRouter();
   const { readingList, toggleReadingList, visited } = useArchive();
-  const [lens, setLens] = useState<Lens>(initialLens);
-  const [query, setQuery] = useState(initialQuery);
+  const sceneTier = useScene((s) => s.tier);
+  const lens = useScene((s) => s.lens);
+  const query = useScene((s) => s.query);
+  const setSceneLens = useScene((s) => s.setLens);
+  const setSceneQuery = useScene((s) => s.setQuery);
+  const is3d = sceneTier >= 2;
   const [librarianOpen, setLibrarianOpen] = useState(false);
   const [shelfIntro, setShelfIntro] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -74,16 +70,34 @@ export default function ShelfWall({
   const prevRects = useRef(new Map<string, DOMRect>());
   const firstRender = useRef(true);
 
+  const soundOn = useSoundOn();
+
+  // sync the URL lens into the scene store once per mount
+  useEffect(() => {
+    setSceneLens(initialLens);
+    setSceneQuery(initialQuery);
+    useScene.getState().setPhase('shelf');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // shelf intro stagger (DOM shelf only)
   useEffect(() => {
     try {
       if (!window.sessionStorage.getItem('archive.lit')) {
         setShelfIntro(true);
         window.sessionStorage.setItem('archive.lit', '1');
-        // release the intro class once played so it never fights hover transforms
         setTimeout(() => setShelfIntro(false), 1900);
       }
     } catch {}
   }, []);
+
+  const setQuery = (q: string) => setSceneQuery(q);
+
+  // room tone while the shelf is open and sound is enabled
+  useEffect(() => {
+    if (soundOn) startRoomTone();
+    return () => stopRoomTone();
+  }, [soundOn]);
 
   // ---- search matching -------------------------------------------------
   const terms = useMemo(
@@ -176,7 +190,8 @@ export default function ShelfWall({
   // ---- interactions ----------------------------------------------------
   const changeLens = useCallback(
     (l: Lens) => {
-      setLens(l);
+      setSceneLens(l);
+      play('reshelve');
       track('lens_change', { lens: l });
       try {
         const url = new URL(window.location.href);
@@ -184,7 +199,7 @@ export default function ShelfWall({
         window.history.replaceState(null, '', url.toString());
       } catch {}
     },
-    [],
+    [setSceneLens],
   );
 
   const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -298,7 +313,7 @@ export default function ShelfWall({
   }
 
   return (
-    <div className={`room${shelfIntro ? ' shelf-intro' : ''}`}>
+    <div className={`room${shelfIntro ? ' shelf-intro' : ''}${is3d ? ' room-3d' : ''}`}>
       <header className="room-topbar">
         <div className="room-brand">
           <b>THE ARCHIVE</b>
@@ -345,6 +360,7 @@ export default function ShelfWall({
       </header>
 
       <main className="wall" aria-label="The shelf">
+        {!is3d && (
         <div className="tier">
           {(() => {
             let n = 0;
@@ -413,6 +429,12 @@ export default function ShelfWall({
           <LegendCard />
           <div className="plank" aria-hidden="true" />
         </div>
+        )}
+        {is3d && (
+          <div className="legend-anchor">
+            <LegendCard />
+          </div>
+        )}
       </main>
 
       <footer className="room-foot">
@@ -421,6 +443,7 @@ export default function ShelfWall({
           <kbd>L</kbd> librarian
         </span>
         <span className="mono">Bayshore · Data Science &amp; AI · {volumes.length} volumes</span>
+        <SoundToggle />
       </footer>
 
       <button className="librarian-bell" onClick={() => setLibrarianOpen((v) => !v)} aria-expanded={librarianOpen}>

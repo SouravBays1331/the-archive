@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { track } from '@/lib/analytics';
+import { play } from '@/lib/sound';
 
 type Phase = 'idle' | 'submitting' | 'error' | 'locked' | 'success';
 

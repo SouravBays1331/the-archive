@@ -114,3 +114,21 @@ data/                      enquiries.jsonl, analytics.jsonl (gitignored)
 - If you restart the site, kill the process listening on the port first
   (`netstat -ano | findstr :4321` → `taskkill /PID <pid> /F`) — an orphaned
   `next start` serves a stale build manifest and 400s its own old chunks.
+
+## v2 — the room comes alive (`v2` branch)
+
+- **3D shelf** (tier-2/3 devices): persistent R3F canvas behind the DOM UI — floating
+  plank with LED strip, reading-lamp spotlight, bloom/vignette/grain, six volumes
+  with generated spine textures (accent band, glyphs, foil bands, vertical serif
+  codename). Opening shot slides the volume out, rotates and dollies, then a paper
+  handoff into the reader; returning re-settles the volume. Tier detection puts
+  2019+ laptops on tier 3; `?flat=1` or reduced-motion keeps the 2.5D DOM shelf.
+- **Scroll-scrubbed page turns**: wheel scrubs the page curl, release snaps to the
+  nearest spread; keys/buttons play the full 700ms turn. The problem chapter's
+  tangle tightens with the scrub.
+- **Sound design** (§16): WebAudio-synthesised cues (page turn, slide, stamp,
+  lights-on, reshelve, room tone) — off by default, speaker toggle in the footers.
+- **Librarian on DeepSeek**: set `DEEPSEEK_API_KEY` (+ optional `DEEPSEEK_MODEL`,
+  default `deepseek-v4.1-flash`) in the env; provider auto-detects
+  (`LIBRARIAN_PROVIDER=deepseek|anthropic|keyword` to force). Keyword fallback
+  remains the no-key path.

@@ -3226,3 +3226,77 @@ textarea {
     right: -14px;
   }
 }
+
+/* ============================================================
+   v2 · 3D shelf, paper handoff, sound, scrub
+   ============================================================ */
+.scene-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+/* the room turns transparent and click-through so the canvas receives pointers */
+.room-3d {
+  background: transparent !important;
+  pointer-events: none;
+}
+.room-3d > * {
+  position: relative;
+  z-index: 10;
+}
+.room-3d .room-topbar,
+.room-3d .room-foot,
+.room-3d .librarian-bell {
+  pointer-events: auto;
+}
+.wall {
+  position: relative;
+}
+.legend-anchor {
+  position: fixed;
+  right: 44px;
+  bottom: 110px;
+  z-index: 10;
+}
+.html-ribbon {
+  background: var(--paper-2);
+  color: var(--ink);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  line-height: 1.45;
+  max-width: 250px;
+  box-shadow: 0 14px 30px -14px rgba(0, 0, 0, 0.9);
+}
+.paper-handoff {
+  position: fixed;
+  inset: 0;
+  background: var(--paper);
+  z-index: 50;
+  pointer-events: none;
+}
+.sound-toggle {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px 11px;
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  transition: all var(--d-base) var(--ease-standard);
+}
+.sound-toggle:hover {
+  color: var(--text-mid);
+  border-color: var(--text-mid);
+}
+.sound-toggle.on {
+  color: var(--lamp);
+  border-color: rgba(255, 217, 160, 0.5);
+}
+/* the revealed spread under a scrubbing page */
+.spread-under {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}

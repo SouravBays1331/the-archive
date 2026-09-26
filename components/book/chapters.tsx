@@ -228,19 +228,38 @@ function EditionCards() {
 
 function Tangle({ slug, accent, active }: { slug: string; accent: string; active: boolean }) {
   const [tension, setTension] = useState(1); // 1 = loose chaos → 0 = tight knot
+  const [scrubbing, setScrubbing] = useState(false);
   useEffect(() => {
     if (!active) return;
+    // scrub-driven: while the visitor scrubs the turn away from this chapter,
+    // the knot tightens with the page (spec §10: scroll scrubs)
+    const onScrub = (e: Event) => {
+      const p = Math.max(0, Math.min(1, (e as CustomEvent).detail?.p ?? 0));
+      setScrubbing(true);
+      setTension(1 - p * 0.85);
+    };
+    const onEnd = () => setScrubbing(false);
+    window.addEventListener('archive:turnscrub', onScrub);
+    window.addEventListener('archive:turnscrub-end', onEnd);
+    return () => {
+      window.removeEventListener('archive:turnscrub', onScrub);
+      window.removeEventListener('archive:turnscrub-end', onEnd);
+    };
+  }, [active]);
+  useEffect(() => {
+    if (!active || scrubbing) return;
     let raf = 0;
     const t0 = performance.now();
-    const dur = 1600;
+    const from = tension;
+    const dur = 900;
     const tick = (t: number) => {
       const p = Math.min(1, (t - t0) / dur);
-      setTension(1 - Math.pow(1 - p, 3));
+      setTension(from + (0.15 - from) * (1 - Math.pow(1 - p, 3)));
       if (p < 1) raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [active]);
+  }, [active, scrubbing]);
 
   const paths = useMemo(() => {
     const rng = rngFor(slug + ':tangle');

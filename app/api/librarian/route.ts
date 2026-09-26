@@ -97,21 +97,85 @@ export async function POST(req: NextRequest) {
     summary: v.approach.summaryExec,
   }));
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (apiKey && process.env.LIBRARIAN_LLM !== 'off') {
+  const deepseekKey = process.env.DEEPSEEK_API_KEY;
+  const anthropicKey = process.env.ANTHROPIC_API_KEY;
+  const provider =
+    process.env.LIBRARIAN_PROVIDER ??
+    (deepseekKey ? 'deepseek' : anthropicKey ? 'anthropic' : 'keyword');
+
+  const finish = (message: string, recs: { slug: string; reason: string }[]) => {
+    const valid = new Map(summaries.map((s) => [s.slug, s.codename]));
+    return NextResponse.json({
+      message,
+      recommendations: recs
+        .filter((r) => valid.has(r.slug))
+        .map((r) => ({ ...r, codename: valid.get(r.slug) })),
+    });
+  };
+
+  if (provider === 'deepseek' && deepseekKey) {
+    try {
+      const corpus = buildCorpus(summaries);
+      const base = process.env.DEEPSEEK_BASE_URL ?? 'https://api.deepseek.com';
+      const model = process.env.DEEPSEEK_MODEL ?? 'deepseek-v4.1-flash';
+      const res = await fetch(`${base}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          authorization: `Bearer ${deepseekKey}`,
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            {
+              role: 'system',
+              content: `You are "the librarian", the guide for a private product-portfolio archive of a data science & AI team. Recommend volumes from ONLY this corpus:
+${corpus}
+
+Rules: Only discuss the portfolio and the team's capabilities; politely decline anything else. Never speculate about client identities; engagements are confidential. Never invent metrics; quote only figures present above. Reply with STRICT JSON only: {"message": string (2-4 sentences, warm, precise), "recommendations": [{"slug": string, "reason": string (one line)}]} with 0-3 recommendations using only slugs from the corpus.`,
+            },
+            { role: 'user', content: parsed.data.query },
+          ],
+          temperature: 0.3,
+          max_tokens: 600,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const text: string = data?.choices?.[0]?.message?.content ?? '';
+        const match = /\{[\s\S]*\}/.exec(text);
+        if (match) {
+          const parsedOut = z
+            .object({
+              message: z.string(),
+              recommendations: z.array(z.object({ slug: z.string(), reason: z.string() })),
+            })
+            .safeParse(JSON.parse(match[0]));
+          if (parsedOut.success) return finish(parsedOut.data.message, parsedOut.data.recommendations);
+        }
+      }
+    } catch {
+      /* fall through to keyword fallback */
+    }
+  }
+
+  if (provider === 'anthropic' && anthropicKey) {
     try {
       const corpus = buildCorpus(summaries);
       const res = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
           'content-type': 'application/json',
-          'x-api-key': apiKey,
+          'x-api-key': anthropicKey,
           'anthropic-version': '2023-06-01',
         },
         body: JSON.stringify({
           model: process.env.LIBRARIAN_MODEL ?? 'claude-sonnet-4-20250514',
           max_tokens: 600,
-          system: `You are "the librarian", the guide for a private product-portfolio archive of a data science & AI team. Recommend volumes from ONLY this corpus:\n${corpus}\n\nRules: Only discuss the portfolio and the team's capabilities; politely decline anything else. Never speculate about client identities; engagements are confidential. Never invent metrics; quote only figures present above. Reply with STRICT JSON only: {"message": string (2-4 sentences, warm, precise), "recommendations": [{"slug": string, "reason": string (one line)}]} with 0-3 recommendations using only slugs from the corpus.`,
+          system: `You are "the librarian", the guide for a private product-portfolio archive of a data science & AI team. Recommend volumes from ONLY this corpus:
+${corpus}
+
+Rules: Only discuss the portfolio and the team's capabilities; politely decline anything else. Never speculate about client identities; engagements are confidential. Never invent metrics; quote only figures present above. Reply with STRICT JSON only: {"message": string (2-4 sentences, warm, precise), "recommendations": [{"slug": string, "reason": string (one line)}]} with 0-3 recommendations using only slugs from the corpus.`,
           messages: [{ role: 'user', content: parsed.data.query }],
         }),
       });
@@ -126,15 +190,7 @@ export async function POST(req: NextRequest) {
               recommendations: z.array(z.object({ slug: z.string(), reason: z.string() })),
             })
             .safeParse(JSON.parse(match[0]));
-          if (parsedOut.success) {
-            const valid = new Map(summaries.map((s) => [s.slug, s.codename]));
-            return NextResponse.json({
-              message: parsedOut.data.message,
-              recommendations: parsedOut.data.recommendations
-                .filter((r) => valid.has(r.slug))
-                .map((r) => ({ ...r, codename: valid.get(r.slug) })),
-            });
-          }
+          if (parsedOut.success) return finish(parsedOut.data.message, parsedOut.data.recommendations);
         }
       }
     } catch {

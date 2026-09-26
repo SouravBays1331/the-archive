@@ -10,12 +10,17 @@
     "hash": "node scripts/hash-password.mjs"
   },
   "dependencies": {
+    "@react-three/drei": "^9.114.3",
+    "@react-three/fiber": "^8.17.10",
+    "@react-three/postprocessing": "^2.16.3",
     "bcryptjs": "2.4.3",
     "jose": "^5.9.6",
     "next": "14.2.15",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "zod": "^3.23.8"
+    "three": "^0.169.0",
+    "zod": "^3.23.8",
+    "zustand": "^5.0.1"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
